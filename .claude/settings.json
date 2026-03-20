@@ -28,8 +28,8 @@
   "permissions": {
     "allow": [
       "Read(/**)",
-      "Edit(/.claude/worktrees/**)",
-      "Write(/.claude/worktrees/**)",
+      "Edit(/**)",
+      "Write(/**)",
       "Bash(*)"
     ]
   }
