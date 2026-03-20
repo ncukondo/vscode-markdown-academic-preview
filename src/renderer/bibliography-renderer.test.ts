@@ -58,4 +58,28 @@ describe("renderBibliography", () => {
       expect(result).toBe("");
     });
   });
+
+  describe("Step 2: nocite with specific ids", () => {
+    it("includes nocite entries alongside cited entries", () => {
+      const result = renderBibliography({
+        bibliographyData: threeEntries(),
+        citedIds: ["smith2020"],
+        nocite: ["adams2021"],
+        cslStyle: null,
+      });
+      expect(result).toContain("Smith");
+      expect(result).toContain("Adams");
+    });
+
+    it("ignores nocite id that does not exist in bibliography", () => {
+      const result = renderBibliography({
+        bibliographyData: threeEntries(),
+        citedIds: ["smith2020"],
+        nocite: ["nonexistent"],
+        cslStyle: null,
+      });
+      expect(result).toContain("Smith");
+      expect(result).not.toContain("nonexistent");
+    });
+  });
 });
