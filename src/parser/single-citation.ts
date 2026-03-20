@@ -21,6 +21,10 @@ export function parseSingleCitation(text: string): SingleCitation | null {
   const atIndex = text.indexOf("@");
   if (atIndex === -1) return null;
 
+  // Check for suppress-author flag: `-` immediately before `@`
+  const suppressAuthor =
+    atIndex > 0 && text[atIndex - 1] === "-";
+
   // Parse the citation key starting after @
   const keyResult = parseCitationKey(text, atIndex + 1);
   if (!keyResult) return null;
@@ -30,6 +34,6 @@ export function parseSingleCitation(text: string): SingleCitation | null {
     prefix: "",
     suffix: "",
     locator: null,
-    suppressAuthor: false,
+    suppressAuthor,
   };
 }

@@ -22,4 +22,27 @@ describe("parseSingleCitation", () => {
       expect(parseSingleCitation("no citation here")).toBeNull();
     });
   });
+
+  // Step 2: Suppress author
+  describe("suppress author", () => {
+    it('parses "-@smith2020" with suppressAuthor true', () => {
+      expect(parseSingleCitation("-@smith2020")).toEqual({
+        id: "smith2020",
+        prefix: "",
+        suffix: "",
+        locator: null,
+        suppressAuthor: true,
+      });
+    });
+
+    it('parses " -@smith2020" with leading space and suppressAuthor true', () => {
+      expect(parseSingleCitation(" -@smith2020")).toEqual({
+        id: "smith2020",
+        prefix: "",
+        suffix: "",
+        locator: null,
+        suppressAuthor: true,
+      });
+    });
+  });
 });
