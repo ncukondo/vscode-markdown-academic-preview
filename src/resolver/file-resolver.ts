@@ -2,13 +2,18 @@ export interface ResolveContext {
   mdFileDir: string;
   searchDirectories: string[];
   workspaceRoot: string;
-  exists: (path: string) => boolean | Promise<boolean>;
+  exists: (path: string) => boolean;
 }
 
+// Checks only POSIX absolute paths (/ prefix). Windows-style paths (C:\, C:/)
+// are not handled here because the VS Code extension normalizes all paths to
+// POSIX-style URIs via vscode.Uri before they reach this layer.
 function isAbsolute(filePath: string): boolean {
   return filePath.startsWith("/");
 }
 
+// Joins using / separator only. Same assumption as isAbsolute: paths are
+// already normalized to POSIX-style by the caller (vscode.Uri).
 function joinPath(dir: string, relative: string): string {
   const segments = dir.replace(/\/+$/, "").split("/");
   for (const part of relative.split("/")) {
