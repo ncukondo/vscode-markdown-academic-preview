@@ -21,12 +21,14 @@
   "scripts": {
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
     "watch": "npm run build -- --watch",
+    "test": "vitest run",
     "package": "vsce package"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/vscode": "^1.80.0",
     "esbuild": "^0.25.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.0"
   }
 }
