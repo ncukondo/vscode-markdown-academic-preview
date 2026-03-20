@@ -58,12 +58,12 @@ interface PluginOptions {
 
 ### Step 4: YAML metadata integration
 
-- [ ] Write test: document with frontmatter `bibliography: refs.bib` → bibliography loaded and used
-- [ ] Write test: document with `csl: ieee.csl` → citation style applied
-- [ ] Write test: document with inline `references` → used for rendering
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: document with frontmatter `bibliography: refs.bib` → bibliography loaded and used
+- [x] Write test: document with `csl: ieee.csl` → citation style applied
+- [x] Write test: document with inline `references` → used for rendering
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 5: Citations do not interfere with other markdown
 

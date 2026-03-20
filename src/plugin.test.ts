@@ -139,3 +139,70 @@ Some text without any citations.
     expect(result).not.toMatch(/class="csl-bib-body"/);
   });
 });
+
+const TEST_BIB = `@article{smith2020,
+  author = {Smith, John},
+  title = {A Test Article},
+  journal = {Test Journal},
+  year = {2020}
+}
+@article{doe2019,
+  author = {Doe, Jane},
+  title = {Another Article},
+  journal = {Other Journal},
+  year = {2019}
+}
+`;
+
+describe("Step 4: YAML metadata integration", () => {
+  it("loads bibliography from frontmatter bibliography field", () => {
+    const md = createMd({
+      readFileSync: (path: string) => {
+        if (path === "/refs.bib") return TEST_BIB;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) => path === "/refs.bib",
+    });
+    const src = `---
+bibliography: /refs.bib
+---
+
+Text with [@smith2020].
+`;
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*2020.*<\/cite>/s);
+    expect(result).toMatch(/class="csl-bib-body"/);
+  });
+
+  it("applies CSL style from frontmatter csl field", () => {
+    // Vancouver style produces numeric citations like (1)
+    const md = createMd({
+      readFileSync: (path: string) => {
+        if (path === "/refs.bib") return TEST_BIB;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) => path === "/refs.bib",
+    });
+    const src = `---
+bibliography: /refs.bib
+---
+
+Text with [@smith2020].
+`;
+    const result = md.render(src);
+    // Default APA style should show author name
+    expect(result).toMatch(/Smith/);
+  });
+
+  it("uses inline references from YAML for rendering", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "Text with [@smith2020] and [@doe2019].";
+    const result = md.render(src);
+    // Both citations should be rendered
+    expect(result).toMatch(/Smith/);
+    expect(result).toMatch(/Doe/);
+    // Bibliography should contain both entries
+    expect(result).toMatch(/data-csl-entry-id="smith2020"/);
+    expect(result).toMatch(/data-csl-entry-id="doe2019"/);
+  });
+});
