@@ -207,7 +207,7 @@ function renderBracketCitation(
   const allKnown = citations.every((c) => knownIds.has(c.id));
   const knownCitations = citations.filter((c) => knownIds.has(c.id));
   const tooltipHtml = bibliographyTooltipHtml(knownCitations.map((c) => c.id), bibData, cslStyle);
-  const popover = buildPopover(tooltipHtml, getPopoverId);
+  const popover = buildPopover(tooltipHtml, getPopoverId, knownCitations[0]?.id);
 
   if (!allKnown) {
     // Mix of known and unknown - render what we can, warn for unknowns
@@ -256,7 +256,7 @@ function renderInlineCitation(
   }
 
   const tooltipHtml = bibliographyTooltipHtml([id], bibData, cslStyle);
-  const popover = buildPopover(tooltipHtml, getPopoverId);
+  const popover = buildPopover(tooltipHtml, getPopoverId, id);
 
   return `<cite class="pandoc-citation pandoc-citation-inline">${popover.wrapInvoker(escapeHtml(text))}</cite>${popover.element}`;
 }
@@ -331,6 +331,7 @@ function bibliographyTooltipHtml(
 function buildPopover(
   tooltipHtml: string,
   getPopoverId: () => string,
+  refId?: string,
 ): { wrapInvoker: (content: string) => string; element: string } {
   if (!tooltipHtml) {
     return {
@@ -339,9 +340,10 @@ function buildPopover(
     };
   }
   const id = getPopoverId();
+  const href = refId ? ` href="#ref-${refId}"` : "";
   return {
     wrapInvoker: (content) =>
-      `<button type="button" class="pandoc-citation-invoker" style="anchor-name: --${id}" interestfor="${id}">${content}</button>`,
+      `<a${href} class="pandoc-citation-invoker" style="anchor-name: --${id}" interestfor="${id}">${content}</a>`,
     element: `<div popover="hint" id="${id}" class="pandoc-citation-popover" style="position-anchor: --${id}">${tooltipHtml}</div>`,
   };
 }
@@ -397,7 +399,7 @@ function renderBibliographyHtml(
     }),
   );
 
-  return `<section class="pandoc-bibliography">${linkifyUrls(html)}</section>`;
+  return `<section class="pandoc-bibliography">${addBibEntryIds(linkifyUrls(html))}</section>`;
 }
 
 // --- Bibliography loading helpers ---
@@ -518,6 +520,13 @@ function findRefsDivTokens(tokens: Token[]): { start: number; end: number } | nu
 function dirName(filePath: string): string {
   const idx = filePath.lastIndexOf('/');
   return idx === -1 ? '' : filePath.slice(0, idx);
+}
+
+function addBibEntryIds(html: string): string {
+  return html.replace(
+    /data-csl-entry-id="([^"]+)"/g,
+    'id="ref-$1" data-csl-entry-id="$1"',
+  );
 }
 
 function escapeHtml(str: string): string {

@@ -3,7 +3,7 @@
   all: unset;
   color: inherit;
   font: inherit;
-  cursor: default;
+  cursor: pointer;
   display: inline;
 }
 
