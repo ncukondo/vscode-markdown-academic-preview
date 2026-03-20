@@ -22,7 +22,7 @@ Use **citation-js** (`@citation-js/core` + plugins) as the citation and bibliogr
 - `.yaml` (CSL YAML) → parse with `js-yaml`, then feed as CSL JSON to core
 - Inline `references` from YAML metadata → same as CSL YAML path
 - CSL style application via `@citation-js/plugin-csl` (uses citeproc-js internally)
-- Default style: Chicago author-date (Pandoc default)
+- Default style: APA (citation-js built-in; Chicago author-date is not available as a built-in style, and APA produces similar author-date output)
 
 ## Rationale
 
@@ -45,7 +45,7 @@ Use **citation-js** (`@citation-js/core` + plugins) as the citation and bibliogr
 - Some edge cases in BibTeX parsing may differ from Pandoc's behavior
 
 ### Neutral
-- Chicago author-date as default matches Pandoc's default behavior
+- APA as default produces author-date output similar to Pandoc's Chicago author-date default; users can supply a custom Chicago CSL XML via cslStyle option
 
 ## Alternatives Considered
 

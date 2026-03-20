@@ -13,7 +13,7 @@
 | 6 | [YAML metadata extractor](completed/20260320-07-yaml-metadata-extractor.md) | Done | [ADR-002](../decisions/ADR-002-yaml-full-document-scan.md) |
 | 7 | [File path resolver](completed/20260320-08-file-path-resolver.md) | Done | [ADR-003](../decisions/ADR-003-file-path-resolution.md) |
 | 8 | [Bibliography loader](completed/20260320-09-bibliography-loader.md) | Done | [ADR-001](../decisions/ADR-001-citation-js-for-rendering.md) |
-| 9 | [Citation renderer](20260320-10-citation-renderer.md) | Todo | [ADR-001](../decisions/ADR-001-citation-js-for-rendering.md) |
+| 9 | [Citation renderer](completed/20260320-10-citation-renderer.md) | Done | [ADR-001](../decisions/ADR-001-citation-js-for-rendering.md) |
 | 10 | [Bibliography renderer](20260320-11-bibliography-renderer.md) | Todo | [ADR-001](../decisions/ADR-001-citation-js-for-rendering.md) |
 | 11 | [markdown-it plugin integration](20260320-12-markdownit-plugin.md) | Todo | — |
 
