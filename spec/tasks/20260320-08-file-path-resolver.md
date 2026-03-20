@@ -30,48 +30,48 @@ function resolvePath(filePath: string, context: ResolveContext): string | null;
 
 ### Step 1: Absolute paths
 
-- [ ] Write test: `"/absolute/path/refs.bib"` → returned as-is (if exists)
-- [ ] Write test: absolute path that doesn't exist → `null`
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"/absolute/path/refs.bib"` → returned as-is (if exists)
+- [x] Write test: absolute path that doesn't exist → `null`
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: Relative path resolved from markdown file directory
 
-- [ ] Write test: `"refs.bib"` with mdFileDir `/project/docs`, file exists at `/project/docs/refs.bib` → resolved
-- [ ] Write test: `"../bib/refs.bib"` with mdFileDir `/project/docs` → `/project/bib/refs.bib`
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"refs.bib"` with mdFileDir `/project/docs`, file exists at `/project/docs/refs.bib` → resolved
+- [x] Write test: `"../bib/refs.bib"` with mdFileDir `/project/docs` → `/project/bib/refs.bib`
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: Fallback to search directories
 
-- [ ] Write test: `"refs.bib"` not in mdFileDir, exists in searchDirectories[0] → resolved
-- [ ] Write test: `"refs.bib"` not in first searchDir, exists in second → resolved
-- [ ] Write test: `"refs.bib"` not in any searchDir → falls through
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"refs.bib"` not in mdFileDir, exists in searchDirectories[0] → resolved
+- [x] Write test: `"refs.bib"` not in first searchDir, exists in second → resolved
+- [x] Write test: `"refs.bib"` not in any searchDir → falls through
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 4: Fallback to workspace root
 
-- [ ] Write test: `"refs.bib"` not in mdFileDir or searchDirs, exists at workspace root → resolved
-- [ ] Write test: not found anywhere → `null`
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"refs.bib"` not in mdFileDir or searchDirs, exists at workspace root → resolved
+- [x] Write test: not found anywhere → `null`
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 5: Default bibliography (when frontmatter has no bibliography field)
 
-- [ ] Write test: resolve default bibliography paths using same priority chain
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: resolve default bibliography paths using same priority chain
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
