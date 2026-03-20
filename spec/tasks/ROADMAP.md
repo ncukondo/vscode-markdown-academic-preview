@@ -6,7 +6,7 @@
 |-------|------|--------|-----|
 | 0 | [Test infrastructure setup](completed/20260320-01-test-infrastructure.md) | Done | — |
 | 1 | [Citation key parser](completed/20260320-02-citation-key-parser.md) | Done | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
-| 2 | [Locator term matcher](20260320-03-locator-matcher.md) | Todo | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
+| 2 | [Locator term matcher](completed/20260320-03-locator-matcher.md) | Done | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
 | 3 | [Single citation parser](20260320-04-single-citation-parser.md) | Todo | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
 | 4 | [Bracket citation parser](20260320-05-bracket-citation-parser.md) | Todo | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
 | 5 | [Inline citation parser](20260320-06-inline-citation-parser.md) | Todo | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
