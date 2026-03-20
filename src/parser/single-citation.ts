@@ -25,13 +25,19 @@ export function parseSingleCitation(text: string): SingleCitation | null {
   const suppressAuthor =
     atIndex > 0 && text[atIndex - 1] === "-";
 
+  // Extract prefix: everything before the [-]@ marker
+  // Whitespace-only prefix is normalized to empty string
+  const prefixEnd = suppressAuthor ? atIndex - 1 : atIndex;
+  const rawPrefix = text.slice(0, prefixEnd);
+  const prefix = rawPrefix.trim().length === 0 ? "" : rawPrefix;
+
   // Parse the citation key starting after @
   const keyResult = parseCitationKey(text, atIndex + 1);
   if (!keyResult) return null;
 
   return {
     id: keyResult.key,
-    prefix: "",
+    prefix,
     suffix: "",
     locator: null,
     suppressAuthor,

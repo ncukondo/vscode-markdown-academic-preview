@@ -45,4 +45,37 @@ describe("parseSingleCitation", () => {
       });
     });
   });
+
+  // Step 3: Prefix text
+  describe("prefix text", () => {
+    it('parses "see @smith2020" with prefix', () => {
+      expect(parseSingleCitation("see @smith2020")).toEqual({
+        id: "smith2020",
+        prefix: "see ",
+        suffix: "",
+        locator: null,
+        suppressAuthor: false,
+      });
+    });
+
+    it('parses "e.g., @smith2020" with prefix', () => {
+      expect(parseSingleCitation("e.g., @smith2020")).toEqual({
+        id: "smith2020",
+        prefix: "e.g., ",
+        suffix: "",
+        locator: null,
+        suppressAuthor: false,
+      });
+    });
+
+    it('parses "see -@smith2020" with prefix and suppressAuthor', () => {
+      expect(parseSingleCitation("see -@smith2020")).toEqual({
+        id: "smith2020",
+        prefix: "see ",
+        suffix: "",
+        locator: null,
+        suppressAuthor: true,
+      });
+    });
+  });
 });
