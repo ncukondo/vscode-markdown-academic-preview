@@ -24,6 +24,9 @@
     "test": "vitest run",
     "package": "vsce package"
   },
+  "dependencies": {
+    "yaml": "^2.7.0"
+  },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/vscode": "^1.80.0",
