@@ -71,3 +71,71 @@ describe("Step 2: Inline citation rendering", () => {
     expect(result).toMatch(/10/);
   });
 });
+
+describe("Step 3: Bibliography injection", () => {
+  it("appends bibliography section after document with citations", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    // Should contain a bibliography section with csl-bib-body class
+    expect(result).toMatch(/class="csl-bib-body"/);
+    // Bibliography should contain the cited entry
+    expect(result).toMatch(/data-csl-entry-id="smith2020"/);
+  });
+
+  it("includes all entries when nocite: @* is specified", () => {
+    const md = createMd();
+    const src = `---
+references:
+  - id: smith2020
+    type: article-journal
+    author:
+      - family: Smith
+        given: John
+    title: A Test Article
+    container-title: Test Journal
+    issued:
+      date-parts: [[2020]]
+  - id: doe2019
+    type: article-journal
+    author:
+      - family: Doe
+        given: Jane
+    title: Another Article
+    container-title: Other Journal
+    issued:
+      date-parts: [[2019]]
+nocite: |
+  @*
+---
+
+Some text without citations.
+`;
+    const result = md.render(src);
+    // Both entries should be in bibliography even though none are cited
+    expect(result).toMatch(/data-csl-entry-id="smith2020"/);
+    expect(result).toMatch(/data-csl-entry-id="doe2019"/);
+  });
+
+  it("does not inject bibliography when no citations and no nocite", () => {
+    const md = createMd();
+    const src = `---
+references:
+  - id: smith2020
+    type: article-journal
+    author:
+      - family: Smith
+        given: John
+    title: A Test Article
+    container-title: Test Journal
+    issued:
+      date-parts: [[2020]]
+---
+
+Some text without any citations.
+`;
+    const result = md.render(src);
+    // No bibliography section should appear
+    expect(result).not.toMatch(/class="csl-bib-body"/);
+  });
+});

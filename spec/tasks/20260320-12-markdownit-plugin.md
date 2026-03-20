@@ -49,12 +49,12 @@ interface PluginOptions {
 
 ### Step 3: Bibliography injection
 
-- [ ] Write test: document with citations → rendered HTML ends with bibliography section
-- [ ] Write test: document with `nocite: @*` → all bib entries in bibliography
-- [ ] Write test: document with no citations and no nocite → no bibliography section
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: document with citations → rendered HTML ends with bibliography section
+- [x] Write test: document with `nocite: @*` → all bib entries in bibliography
+- [x] Write test: document with no citations and no nocite → no bibliography section
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 4: YAML metadata integration
 

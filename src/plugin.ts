@@ -117,6 +117,19 @@ export function pandocCitationPlugin(
         env.citedIds!.add(data.id);
       }
     });
+
+    // Inject bibliography at end of document if there are cited entries or nocite
+    const hasCitations = env.citedIds!.size > 0;
+    const hasNocite = env.nocite && env.nocite.length > 0;
+
+    if ((hasCitations || hasNocite) && bibData.ids.length > 0) {
+      const bibToken = new state.Token("pandoc_bibliography", "", 0);
+      bibToken.content = JSON.stringify({
+        citedIds: Array.from(env.citedIds!),
+        nocite: env.nocite || [],
+      });
+      state.tokens.push(bibToken);
+    }
   });
 
   // --- Renderers ---
@@ -141,6 +154,21 @@ export function pandocCitationPlugin(
     const citEnv = (env.__citations || {}) as CitationEnv;
     const data = JSON.parse(tokens[idx].content);
     return renderInlineCitation(data.id, data.locator, citEnv);
+  };
+
+  md.renderer.rules["pandoc_bibliography"] = (
+    tokens: Token[],
+    idx: number,
+    _options: MarkdownIt.Options,
+    env: Record<string, unknown>,
+  ) => {
+    const citEnv = (env.__citations || {}) as CitationEnv;
+    const data = JSON.parse(tokens[idx].content);
+    return renderBibliographyHtml(
+      data.citedIds,
+      data.nocite,
+      citEnv,
+    );
   };
 }
 
@@ -259,6 +287,46 @@ function renderSingleCitationText(
   let text = String(subset.format("citation", { format: "text", template: cslStyle || "apa" }));
   text = text.replace(/^\((.+)\)$/, "$1");
   return text;
+}
+
+function renderBibliographyHtml(
+  citedIds: string[],
+  nocite: string[],
+  env: CitationEnv,
+): string {
+  const bibData = env.bibliographyData;
+  if (!bibData || bibData.ids.length === 0) return "";
+
+  // Determine which entries to include
+  const includeIds = new Set(citedIds);
+
+  if (nocite.includes("*")) {
+    // Include all entries
+    for (const id of bibData.ids) {
+      includeIds.add(id);
+    }
+  } else {
+    for (const id of nocite) {
+      if (bibData.ids.includes(id)) {
+        includeIds.add(id);
+      }
+    }
+  }
+
+  if (includeIds.size === 0) return "";
+
+  const entries = bibData.cite.data.filter((e) => includeIds.has(e.id));
+  if (entries.length === 0) return "";
+
+  const subset = new Cite(entries);
+  const html = String(
+    subset.format("bibliography", {
+      format: "html",
+      template: env.cslStyle || "apa",
+    }),
+  );
+
+  return `<section class="pandoc-bibliography">${html}</section>`;
 }
 
 // --- Bibliography loading helpers ---
