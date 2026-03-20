@@ -13,6 +13,8 @@ function makeBibData(
     year: number;
     type?: string;
     title?: string;
+    DOI?: string;
+    URL?: string;
   }>,
 ) {
   const cite = new Cite(
@@ -22,6 +24,8 @@ function makeBibData(
       author: [{ family: e.family, given: e.given }],
       title: e.title ?? `Test Article by ${e.family}`,
       issued: { "date-parts": [[e.year]] },
+      ...(e.DOI ? { DOI: e.DOI } : {}),
+      ...(e.URL ? { URL: e.URL } : {}),
     })),
   );
   return { cite, ids: cite.getIds() };
@@ -135,7 +139,70 @@ describe("renderBibliography", () => {
     });
   });
 
-  describe("Step 5: HTML output structure", () => {
+  describe("Step 5: DOI and URL linkification", () => {
+    it("renders DOI as a clickable link", () => {
+      const bibData = makeBibData([
+        { id: "smith2020", family: "Smith", given: "John", year: 2020, DOI: "10.1234/test" },
+      ]);
+      const result = renderBibliography({
+        bibliographyData: bibData,
+        citedIds: ["smith2020"],
+        nocite: [],
+        cslStyle: null,
+      });
+      expect(result).toContain('<a href="https://doi.org/10.1234/test">https://doi.org/10.1234/test</a>');
+    });
+
+    it("renders URL as a clickable link", () => {
+      const bibData = makeBibData([
+        { id: "doe2021", family: "Doe", given: "Jane", year: 2021, URL: "https://example.com/article" },
+      ]);
+      const result = renderBibliography({
+        bibliographyData: bibData,
+        citedIds: ["doe2021"],
+        nocite: [],
+        cslStyle: null,
+      });
+      expect(result).toContain('<a href="https://example.com/article">https://example.com/article</a>');
+    });
+
+    it("renders both DOI and URL as links when both present", () => {
+      const bibData = makeBibData([
+        {
+          id: "lee2022",
+          family: "Lee",
+          given: "Bob",
+          year: 2022,
+          DOI: "10.5678/example",
+          URL: "https://example.org/paper",
+        },
+      ]);
+      const result = renderBibliography({
+        bibliographyData: bibData,
+        citedIds: ["lee2022"],
+        nocite: [],
+        cslStyle: null,
+      });
+      expect(result).toContain('<a href="https://doi.org/10.5678/example">https://doi.org/10.5678/example</a>');
+    });
+
+    it("does not double-linkify URLs already in anchor tags", () => {
+      const bibData = makeBibData([
+        { id: "smith2020", family: "Smith", given: "John", year: 2020, DOI: "10.1234/test" },
+      ]);
+      const result = renderBibliography({
+        bibliographyData: bibData,
+        citedIds: ["smith2020"],
+        nocite: [],
+        cslStyle: null,
+      });
+      // Should not have nested anchors
+      expect(result).not.toContain('<a href="<a');
+      expect(result).not.toMatch(/<a[^>]*>.*<a/);
+    });
+  });
+
+  describe("Step 6: HTML output structure", () => {
     it("wraps output in a container div with appropriate class", () => {
       const result = renderBibliography({
         bibliographyData: threeEntries(),

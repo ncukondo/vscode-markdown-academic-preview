@@ -207,7 +207,72 @@ Text with [@smith2020].
   });
 });
 
-describe("Step 5: Citations do not interfere with other markdown", () => {
+describe("Step 5: Popover tooltips with interestfor", () => {
+  it("renders interestfor attribute on citation invoker", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/interestfor="pandoc-popover-\d+"/);
+  });
+
+  it("renders popover element with matching id", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    const match = result.match(/interestfor="(pandoc-popover-\d+)"/);
+    expect(match).not.toBeNull();
+    const popoverId = match![1];
+    expect(result).toContain(`popover="hint" id="${popoverId}"`);
+  });
+
+  it("popover contains HTML bibliography with links", () => {
+    const md = createMd();
+    const src = `---
+references:
+  - id: withDoi
+    type: article-journal
+    author:
+      - family: Test
+        given: Author
+    title: DOI Article
+    issued:
+      date-parts: [[2024]]
+    DOI: "10.1234/test"
+---
+
+[@withDoi]
+`;
+    const result = md.render(src);
+    expect(result).toMatch(/class="pandoc-citation-popover"/);
+    expect(result).toMatch(/<a href="https:\/\/doi\.org\/10\.1234\/test">/);
+  });
+
+  it("generates unique popover ids for multiple citations", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "[@smith2020] and [@doe2019].";
+    const result = md.render(src);
+    const ids = [...result.matchAll(/interestfor="(pandoc-popover-\d+)"/g)].map(m => m[1]);
+    expect(ids.length).toBe(2);
+    expect(ids[0]).not.toBe(ids[1]);
+  });
+
+  it("inline citation also gets popover", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "@smith2020 says something.";
+    const result = md.render(src);
+    expect(result).toMatch(/interestfor="pandoc-popover-\d+"/);
+    expect(result).toMatch(/popover="hint"/);
+  });
+
+  it("fallback citation does not get popover", () => {
+    const md = createMd();
+    const result = md.render("Text with [@unknown].");
+    expect(result).not.toMatch(/interestfor=/);
+    expect(result).not.toMatch(/popover="hint"/);
+  });
+});
+
+describe("Step 6: Citations do not interfere with other markdown", () => {
   it("does not parse email addresses as citations", () => {
     const md = createMd();
     const result = md.render("Contact user@example.com for info.");

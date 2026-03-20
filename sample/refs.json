@@ -9,7 +9,8 @@
     "container-title": "Journal of Information Processing",
     "issued": { "date-parts": [[2022]] },
     "volume": "63",
-    "page": "1-15"
+    "page": "1-15",
+    "DOI": "10.2197/ipsjjip.63.1"
   },
   {
     "id": "chen2023",
@@ -21,6 +22,7 @@
     ],
     "container-title": "Proceedings of ACL 2023",
     "issued": { "date-parts": [[2023]] },
-    "page": "200-210"
+    "page": "200-210",
+    "URL": "https://aclanthology.org/2023.acl-main.200"
   }
 ]

@@ -13,6 +13,7 @@ import {
 } from "./resolver/bibliography";
 import { resolvePath, resolveDefaultBibliography } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
+import { linkifyUrls } from "./renderer/bibliography-renderer";
 
 export interface PluginOptions {
   mdFilePath?: string;
@@ -35,6 +36,7 @@ export function pandocCitationPlugin(
   // (VS Code may use different env objects for parse and render)
   let currentBibData: BibliographyData | undefined;
   let currentCslStyle: string | null = null;
+  let popoverCounter = 0;
 
   // --- Inline rules ---
 
@@ -105,6 +107,7 @@ export function pandocCitationPlugin(
     // Store in closure for renderers
     currentBibData = bibData;
     currentCslStyle = loadCslStyle(metadata.csl, opts);
+    popoverCounter = 0;
 
     // Remove tokens generated from non-frontmatter YAML blocks
     const yamlRanges = extractNonFrontmatterYamlRanges(state.src);
@@ -156,12 +159,14 @@ export function pandocCitationPlugin(
 
   // --- Renderers ---
 
+  const getPopoverId = () => `pandoc-popover-${popoverCounter++}`;
+
   md.renderer.rules["pandoc_citation"] = (
     tokens: Token[],
     idx: number,
   ) => {
     const citations: SingleCitation[] = JSON.parse(tokens[idx].content);
-    return renderBracketCitation(citations, currentBibData, currentCslStyle);
+    return renderBracketCitation(citations, currentBibData, currentCslStyle, getPopoverId);
   };
 
   md.renderer.rules["pandoc_citation_inline"] = (
@@ -169,7 +174,7 @@ export function pandocCitationPlugin(
     idx: number,
   ) => {
     const data = JSON.parse(tokens[idx].content);
-    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle);
+    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, getPopoverId);
   };
 
   md.renderer.rules["pandoc_bibliography"] = (
@@ -192,6 +197,7 @@ function renderBracketCitation(
   citations: SingleCitation[],
   bibData: BibliographyData | undefined,
   cslStyle: string | null,
+  getPopoverId: () => string,
 ): string {
   if (!bibData || bibData.ids.length === 0) {
     return renderFallbackBracket(citations);
@@ -200,8 +206,8 @@ function renderBracketCitation(
   const knownIds = new Set(bibData.ids);
   const allKnown = citations.every((c) => knownIds.has(c.id));
   const knownCitations = citations.filter((c) => knownIds.has(c.id));
-  const tooltip = bibliographyTooltip(knownCitations.map((c) => c.id), bibData, cslStyle);
-  const titleAttr = tooltip ? ` title="${escapeHtml(tooltip)}"` : "";
+  const tooltipHtml = bibliographyTooltipHtml(knownCitations.map((c) => c.id), bibData, cslStyle);
+  const popover = buildPopover(tooltipHtml, getPopoverId);
 
   if (!allKnown) {
     // Mix of known and unknown - render what we can, warn for unknowns
@@ -213,12 +219,13 @@ function renderBracketCitation(
         parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
       }
     }
-    return `<cite class="pandoc-citation"${titleAttr}>(${parts.join("; ")})</cite>`;
+    const inner = `(${parts.join("; ")})`;
+    return `<cite class="pandoc-citation">${popover.wrapInvoker(inner)}</cite>${popover.element}`;
   }
 
   // All known - render using citation-js
   const text = renderCitationGroup(citations, bibData, cslStyle);
-  return `<cite class="pandoc-citation"${titleAttr}>${escapeHtml(text)}</cite>`;
+  return `<cite class="pandoc-citation">${popover.wrapInvoker(escapeHtml(text))}</cite>${popover.element}`;
 }
 
 function renderFallbackBracket(citations: SingleCitation[]): string {
@@ -231,6 +238,7 @@ function renderInlineCitation(
   locator: { label: string; value: string } | null,
   bibData: BibliographyData | undefined,
   cslStyle: string | null,
+  getPopoverId: () => string,
 ): string {
   if (!bibData || !bibData.ids.includes(id)) {
     return `<cite class="pandoc-citation pandoc-citation-inline pandoc-citation-warning">@${escapeHtml(id)}</cite>`;
@@ -247,10 +255,10 @@ function renderInlineCitation(
     text += `, ${locator.label} ${locator.value}`;
   }
 
-  const tooltip = bibliographyTooltip([id], bibData, cslStyle);
-  const titleAttr = tooltip ? ` title="${escapeHtml(tooltip)}"` : "";
+  const tooltipHtml = bibliographyTooltipHtml([id], bibData, cslStyle);
+  const popover = buildPopover(tooltipHtml, getPopoverId);
 
-  return `<cite class="pandoc-citation pandoc-citation-inline"${titleAttr}>${escapeHtml(text)}</cite>`;
+  return `<cite class="pandoc-citation pandoc-citation-inline">${popover.wrapInvoker(escapeHtml(text))}</cite>${popover.element}`;
 }
 
 function renderCitationGroup(
@@ -296,7 +304,7 @@ function renderCitationGroup(
   return text;
 }
 
-function bibliographyTooltip(
+function bibliographyTooltipHtml(
   ids: string[],
   bibData: BibliographyData,
   cslStyle?: string | null,
@@ -308,16 +316,34 @@ function bibliographyTooltip(
 
   const subset = new Cite(entries);
   try {
-    const text = String(
+    const html = String(
       subset.format("bibliography", {
-        format: "text",
+        format: "html",
         template: cslStyle || "apa",
       }),
     );
-    return text.trim();
+    return linkifyUrls(html);
   } catch {
     return "";
   }
+}
+
+function buildPopover(
+  tooltipHtml: string,
+  getPopoverId: () => string,
+): { wrapInvoker: (content: string) => string; element: string } {
+  if (!tooltipHtml) {
+    return {
+      wrapInvoker: (content) => content,
+      element: "",
+    };
+  }
+  const id = getPopoverId();
+  return {
+    wrapInvoker: (content) =>
+      `<button type="button" class="pandoc-citation-invoker" style="anchor-name: --${id}" interestfor="${id}">${content}</button>`,
+    element: `<div popover="hint" id="${id}" class="pandoc-citation-popover" style="position-anchor: --${id}">${tooltipHtml}</div>`,
+  };
 }
 
 function renderSingleCitationText(
@@ -371,7 +397,7 @@ function renderBibliographyHtml(
     }),
   );
 
-  return `<section class="pandoc-bibliography">${html}</section>`;
+  return `<section class="pandoc-bibliography">${linkifyUrls(html)}</section>`;
 }
 
 // --- Bibliography loading helpers ---

@@ -1,0 +1,68 @@
+/* Invoker button: reset to look like surrounding text */
+.pandoc-citation-invoker {
+  all: unset;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+  display: inline;
+}
+
+/* Popover tooltip — anchored below the citation */
+.pandoc-citation-popover {
+  /* Anchor positioning */
+  position: fixed;
+  inset: auto;
+  position-area: block-end span-inline-end;
+  margin: 4px 0;
+  position-try-fallbacks: --above-right, --below-left, --above-left;
+
+  /* Visual styling */
+  background: var(--vscode-editorHoverWidget-background, #252526);
+  color: var(--vscode-editorHoverWidget-foreground, #cccccc);
+  border: 1px solid var(--vscode-editorHoverWidget-border, #454545);
+  border-radius: 3px;
+  padding: 8px 12px;
+  max-width: 600px;
+  font-size: 0.9em;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.36);
+  overflow: auto;
+  max-height: 300px;
+}
+
+/* Anchor positioning fallbacks */
+@position-try --above-right {
+  position-area: block-start span-inline-end;
+}
+
+@position-try --below-left {
+  position-area: block-end span-inline-start;
+}
+
+@position-try --above-left {
+  position-area: block-start span-inline-start;
+}
+
+/* Links inside popover */
+.pandoc-citation-popover a {
+  color: var(--vscode-textLink-foreground, #3794ff);
+  text-decoration: none;
+}
+
+.pandoc-citation-popover a:hover {
+  text-decoration: underline;
+}
+
+/* CSL bibliography reset inside popover */
+.pandoc-citation-popover .csl-bib-body {
+  margin: 0;
+  padding: 0;
+}
+
+.pandoc-citation-popover .csl-entry {
+  margin-bottom: 0.5em;
+}
+
+.pandoc-citation-popover .csl-entry:last-child {
+  margin-bottom: 0;
+}

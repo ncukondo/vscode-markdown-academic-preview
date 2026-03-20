@@ -13,6 +13,25 @@ const { plugins } = require("@citation-js/core") as {
 };
 const cslConfig = plugins.config.get("@csl");
 
+/**
+ * Convert plain-text URLs in bibliography HTML into clickable links.
+ * Skips URLs that are already inside an <a> tag or an HTML attribute.
+ */
+export function linkifyUrls(html: string): string {
+  // Split on HTML tags to avoid modifying URLs inside attributes
+  return html.replace(
+    /(<[^>]*>)|(https?:\/\/[^\s<>"]+)/g,
+    (match, tag: string | undefined) => {
+      // If it's an HTML tag, leave it as-is
+      if (tag) return match;
+      // It's a bare URL in text content — wrap it
+      const cleanUrl = match.replace(/[.,;:)]+$/, "");
+      const trailing = match.slice(cleanUrl.length);
+      return `<a href="${cleanUrl}">${cleanUrl}</a>${trailing}`;
+    },
+  );
+}
+
 export interface BibliographyRenderOptions {
   bibliographyData: BibliographyData;
   citedIds: string[];
@@ -68,7 +87,7 @@ export function renderBibliography(options: BibliographyRenderOptions): string {
       template,
     }) as string;
 
-    return html;
+    return linkifyUrls(html);
   } catch {
     return "";
   }

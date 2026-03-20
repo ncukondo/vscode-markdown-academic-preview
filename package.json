@@ -18,7 +18,10 @@
     "onLanguage:markdown"
   ],
   "contributes": {
-    "markdown.markdownItPlugins": true
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "./media/citation-popover.css"
+    ]
   },
   "main": "./dist/extension.js",
   "scripts": {

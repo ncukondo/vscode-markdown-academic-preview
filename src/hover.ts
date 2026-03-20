@@ -9,6 +9,7 @@ import {
   resolvePath,
   resolveDefaultBibliography,
 } from "./resolver/file-resolver";
+import { linkifyUrls } from "./renderer/bibliography-renderer";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { plugins } = require("@citation-js/core") as {
@@ -106,8 +107,8 @@ export function createCitationHoverProvider(
       }
 
       try {
-        const html = String(
-          subset.format("bibliography", { format: "html", template }),
+        const html = linkifyUrls(
+          String(subset.format("bibliography", { format: "html", template })),
         );
         const md = new vscode.MarkdownString(html);
         md.supportHtml = true;
