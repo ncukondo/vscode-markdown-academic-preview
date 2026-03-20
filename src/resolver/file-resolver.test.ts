@@ -52,4 +52,33 @@ describe("resolvePath", () => {
       );
     });
   });
+
+  // ─── Step 3: Fallback to search directories ─────────────────────────────
+
+  describe("Step 3: Fallback to search directories", () => {
+    it("resolves from first search directory when not in mdFileDir", () => {
+      const ctx = makeContext(["/shared/bib/refs.bib"], {
+        mdFileDir: "/project/docs",
+        searchDirectories: ["/shared/bib", "/other/bib"],
+      });
+      expect(resolvePath("refs.bib", ctx)).toBe("/shared/bib/refs.bib");
+    });
+
+    it("resolves from second search directory when not in first", () => {
+      const ctx = makeContext(["/other/bib/refs.bib"], {
+        mdFileDir: "/project/docs",
+        searchDirectories: ["/shared/bib", "/other/bib"],
+      });
+      expect(resolvePath("refs.bib", ctx)).toBe("/other/bib/refs.bib");
+    });
+
+    it("falls through when not in any search directory", () => {
+      const ctx = makeContext([], {
+        mdFileDir: "/project/docs",
+        searchDirectories: ["/shared/bib", "/other/bib"],
+        workspaceRoot: "/workspace",
+      });
+      expect(resolvePath("refs.bib", ctx)).toBeNull();
+    });
+  });
 });

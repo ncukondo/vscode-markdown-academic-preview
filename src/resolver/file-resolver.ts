@@ -36,5 +36,13 @@ export function resolvePath(
     return fromMdDir;
   }
 
+  // Fallback: search directories in order
+  for (const dir of context.searchDirectories) {
+    const candidate = joinPath(dir, filePath);
+    if (context.exists(candidate)) {
+      return candidate;
+    }
+  }
+
   return null;
 }
