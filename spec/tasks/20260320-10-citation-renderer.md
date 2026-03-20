@@ -41,53 +41,53 @@ function renderCitation(
 
 ### Step 1: Basic single citation
 
-- [ ] Write test: `[{ id: "smith2020" }]` → renders as "(Smith, 2020)" or similar depending on style
-- [ ] Write test: unknown id → renders with placeholder/warning
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `[{ id: "smith2020" }]` → renders as "(Smith, 2020)" or similar depending on style
+- [x] Write test: unknown id → renders with placeholder/warning
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: Citation with locator
 
-- [ ] Write test: `[{ id: "smith2020", locator: { label: "page", value: "10" } }]` → "(Smith, 2020, p. 10)"
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `[{ id: "smith2020", locator: { label: "page", value: "10" } }]` → "(Smith, 2020, p. 10)"
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: Suppress author
 
-- [ ] Write test: `[{ id: "smith2020", suppressAuthor: true }]` → "(2020)"
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `[{ id: "smith2020", suppressAuthor: true }]` → "(2020)"
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 4: Prefix and suffix
 
-- [ ] Write test: `[{ id: "smith2020", prefix: "see " }]` → "(see Smith, 2020)"
-- [ ] Write test: `[{ id: "smith2020", suffix: ", emphasis added" }]` → "(Smith, 2020, emphasis added)"
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `[{ id: "smith2020", prefix: "see " }]` → "(see Smith, 2020)"
+- [x] Write test: `[{ id: "smith2020", suffix: ", emphasis added" }]` → "(Smith, 2020, emphasis added)"
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 5: Multiple citations in one group
 
-- [ ] Write test: `[{ id: "smith2020" }, { id: "doe2019" }]` → "(Doe, 2019; Smith, 2020)" (sorted by style)
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `[{ id: "smith2020" }, { id: "doe2019" }]` → "(Doe, 2019; Smith, 2020)" (sorted by style)
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 6: Custom CSL style
 
-- [ ] Write test: provide a CSL XML string (e.g., Vancouver/numeric style) → output changes accordingly
-- [ ] Write test: `null` CSL → Chicago author-date default
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: provide a CSL XML string (e.g., Vancouver/numeric style) → output changes accordingly
+- [x] Write test: `null` CSL → APA author-date default
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
