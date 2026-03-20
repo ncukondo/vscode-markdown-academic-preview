@@ -213,4 +213,43 @@ describe("loadBibliography", () => {
       expect(result.ids).toHaveLength(2);
     });
   });
+
+  describe("Step 6: Error handling", () => {
+    it("returns empty result for invalid BibTeX", async () => {
+      const result = await loadBibliography({
+        bibliographyPaths: ["/bad.bib"],
+        inlineReferences: [],
+        readFile: async () => "this is not valid bibtex {{{",
+      });
+
+      // Should not throw, returns empty or partial
+      expect(result.ids).toBeDefined();
+      expect(result.cite).toBeDefined();
+    });
+
+    it("handles file read failure gracefully", async () => {
+      const result = await loadBibliography({
+        bibliographyPaths: ["/missing.bib"],
+        inlineReferences: [],
+        readFile: async () => {
+          throw new Error("ENOENT: file not found");
+        },
+      });
+
+      // Should not throw, returns empty
+      expect(result.ids).toHaveLength(0);
+      expect(result.cite).toBeDefined();
+    });
+
+    it("returns empty BibliographyData for empty bibliography list and no inline refs", async () => {
+      const result = await loadBibliography({
+        bibliographyPaths: [],
+        inlineReferences: [],
+        readFile: async () => "",
+      });
+
+      expect(result.ids).toHaveLength(0);
+      expect(result.cite.data).toHaveLength(0);
+    });
+  });
 });

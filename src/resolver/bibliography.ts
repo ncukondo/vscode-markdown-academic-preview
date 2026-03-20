@@ -24,12 +24,16 @@ export async function loadBibliography(
   const cite = new Cite();
 
   for (const filePath of options.bibliographyPaths) {
-    const content = await options.readFile(filePath);
-    if (isYamlFile(filePath)) {
-      const data = parseYaml(content);
-      cite.add(data);
-    } else {
-      cite.add(content);
+    try {
+      const content = await options.readFile(filePath);
+      if (isYamlFile(filePath)) {
+        const data = parseYaml(content);
+        cite.add(data);
+      } else {
+        cite.add(content);
+      }
+    } catch {
+      // Skip files that fail to read or parse
     }
   }
 
