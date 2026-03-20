@@ -4,7 +4,7 @@
 
 | Phase | Task | Status | ADR |
 |-------|------|--------|-----|
-| 0 | [Test infrastructure setup](20260320-01-test-infrastructure.md) | Todo | — |
+| 0 | [Test infrastructure setup](completed/20260320-01-test-infrastructure.md) | Done | — |
 | 1 | [Citation key parser](20260320-02-citation-key-parser.md) | Todo | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
 | 2 | [Locator term matcher](20260320-03-locator-matcher.md) | Todo | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
 | 3 | [Single citation parser](20260320-04-single-citation-parser.md) | Todo | [ADR-004](../decisions/ADR-004-citation-syntax-scope.md) |
