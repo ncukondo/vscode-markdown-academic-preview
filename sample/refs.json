@@ -1,0 +1,26 @@
+[
+  {
+    "id": "yamada2022",
+    "type": "article-journal",
+    "title": "Frontiers of Bibliographic Data Management",
+    "author": [
+      { "family": "Yamada", "given": "Taro" }
+    ],
+    "container-title": "Journal of Information Processing",
+    "issued": { "date-parts": [[2022]] },
+    "volume": "63",
+    "page": "1-15"
+  },
+  {
+    "id": "chen2023",
+    "type": "paper-conference",
+    "title": "Cross-Language Citation Networks",
+    "author": [
+      { "family": "Chen", "given": "Wei" },
+      { "family": "Park", "given": "Soo-Jin" }
+    ],
+    "container-title": "Proceedings of ACL 2023",
+    "issued": { "date-parts": [[2023]] },
+    "page": "200-210"
+  }
+]

@@ -4,7 +4,7 @@ import type StateCore from "markdown-it/lib/rules_core/state_core.mjs";
 import type StateInline from "markdown-it/lib/rules_inline/state_inline.mjs";
 import { Cite } from "@citation-js/core";
 import "@citation-js/plugin-csl";
-import { extractCitationMetadata } from "./metadata/yaml-extractor";
+import { extractCitationMetadata, extractNonFrontmatterYamlRanges } from "./metadata/yaml-extractor";
 import { parseBracketCitation } from "./parser/bracket-citation";
 import { parseInlineCitation } from "./parser/inline-citation";
 import {
@@ -25,18 +25,16 @@ export interface PluginOptions {
   existsSync?: (path: string) => boolean;
 }
 
-interface CitationEnv {
-  bibliographyData?: BibliographyData;
-  cslStyle?: string | null;
-  citedIds?: Set<string>;
-  nocite?: string[];
-}
-
 export function pandocCitationPlugin(
   md: MarkdownIt,
   options?: PluginOptions,
 ): void {
   const opts = options ?? {};
+
+  // Shared state between core rule and renderers via closure
+  // (VS Code may use different env objects for parse and render)
+  let currentBibData: BibliographyData | undefined;
+  let currentCslStyle: string | null = null;
 
   // --- Inline rules ---
 
@@ -91,8 +89,7 @@ export function pandocCitationPlugin(
 
   // --- Core rule: load bibliography and prepare rendering data ---
   md.core.ruler.push("pandoc_citation_resolve", (state: StateCore) => {
-    const env: CitationEnv = (state.env.__citations = state.env.__citations || {});
-    env.citedIds = new Set<string>();
+    const citedIds = new Set<string>();
 
     // Extract YAML metadata from source
     const metadata = extractCitationMetadata(state.src);
@@ -104,36 +101,56 @@ export function pandocCitationPlugin(
       inlineReferences: metadata.references,
       readFile: opts.readFileSync || (() => ""),
     });
-    env.bibliographyData = bibData;
-    env.nocite = metadata.nocite;
 
-    // Load CSL style if specified
-    env.cslStyle = loadCslStyle(metadata.csl, opts);
+    // Store in closure for renderers
+    currentBibData = bibData;
+    currentCslStyle = loadCslStyle(metadata.csl, opts);
+
+    // Remove tokens generated from non-frontmatter YAML blocks
+    const yamlRanges = extractNonFrontmatterYamlRanges(state.src);
+    if (yamlRanges.length > 0) {
+      state.tokens = state.tokens.filter((token) => {
+        if (!token.map) return true;
+        const [tokenStart, tokenEnd] = token.map;
+        return !yamlRanges.some(
+          ([yamlStart, yamlEnd]) => tokenStart >= yamlStart && tokenEnd <= yamlEnd,
+        );
+      });
+    }
 
     // Walk tokens to collect cited IDs
     walkTokens(state.tokens, (token) => {
       if (token.type === "pandoc_citation") {
         const citations: SingleCitation[] = JSON.parse(token.content);
         for (const c of citations) {
-          env.citedIds!.add(c.id);
+          citedIds.add(c.id);
         }
       } else if (token.type === "pandoc_citation_inline") {
         const data = JSON.parse(token.content);
-        env.citedIds!.add(data.id);
+        citedIds.add(data.id);
       }
     });
 
-    // Inject bibliography at end of document if there are cited entries or nocite
-    const hasCitations = env.citedIds!.size > 0;
-    const hasNocite = env.nocite && env.nocite.length > 0;
+    // Inject bibliography: replace ::: {#refs} ::: marker, or append at end
+    const hasCitations = citedIds.size > 0;
+    const hasNocite = metadata.nocite && metadata.nocite.length > 0;
 
     if ((hasCitations || hasNocite) && bibData.ids.length > 0) {
       const bibToken = new state.Token("pandoc_bibliography", "", 0);
       bibToken.content = JSON.stringify({
-        citedIds: Array.from(env.citedIds!),
-        nocite: env.nocite || [],
+        citedIds: Array.from(citedIds),
+        nocite: metadata.nocite || [],
       });
-      state.tokens.push(bibToken);
+
+      // Look for ::: {#refs} ... ::: pattern in tokens
+      const refsIdx = findRefsDivTokens(state.tokens);
+      if (refsIdx) {
+        // Replace the refs div tokens with bibliography
+        const count = refsIdx.end - refsIdx.start + 1;
+        state.tokens.splice(refsIdx.start, count, bibToken);
+      } else {
+        state.tokens.push(bibToken);
+      }
     }
   });
 
@@ -142,37 +159,29 @@ export function pandocCitationPlugin(
   md.renderer.rules["pandoc_citation"] = (
     tokens: Token[],
     idx: number,
-    _options: MarkdownIt.Options,
-    env: Record<string, unknown>,
   ) => {
-    const citEnv = (env.__citations || {}) as CitationEnv;
     const citations: SingleCitation[] = JSON.parse(tokens[idx].content);
-    return renderBracketCitation(citations, citEnv);
+    return renderBracketCitation(citations, currentBibData, currentCslStyle);
   };
 
   md.renderer.rules["pandoc_citation_inline"] = (
     tokens: Token[],
     idx: number,
-    _options: MarkdownIt.Options,
-    env: Record<string, unknown>,
   ) => {
-    const citEnv = (env.__citations || {}) as CitationEnv;
     const data = JSON.parse(tokens[idx].content);
-    return renderInlineCitation(data.id, data.locator, citEnv);
+    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle);
   };
 
   md.renderer.rules["pandoc_bibliography"] = (
     tokens: Token[],
     idx: number,
-    _options: MarkdownIt.Options,
-    env: Record<string, unknown>,
   ) => {
-    const citEnv = (env.__citations || {}) as CitationEnv;
     const data = JSON.parse(tokens[idx].content);
     return renderBibliographyHtml(
       data.citedIds,
       data.nocite,
-      citEnv,
+      currentBibData,
+      currentCslStyle,
     );
   };
 }
@@ -181,9 +190,9 @@ export function pandocCitationPlugin(
 
 function renderBracketCitation(
   citations: SingleCitation[],
-  env: CitationEnv,
+  bibData: BibliographyData | undefined,
+  cslStyle: string | null,
 ): string {
-  const bibData = env.bibliographyData;
   if (!bibData || bibData.ids.length === 0) {
     return renderFallbackBracket(citations);
   }
@@ -196,7 +205,7 @@ function renderBracketCitation(
     const parts: string[] = [];
     for (const c of citations) {
       if (knownIds.has(c.id)) {
-        parts.push(escapeHtml(renderSingleCitationText(c, bibData, env.cslStyle)));
+        parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle)));
       } else {
         parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
       }
@@ -205,7 +214,7 @@ function renderBracketCitation(
   }
 
   // All known - render using citation-js
-  const text = renderCitationGroup(citations, bibData, env.cslStyle);
+  const text = renderCitationGroup(citations, bibData, cslStyle);
   return `<cite class="pandoc-citation">${escapeHtml(text)}</cite>`;
 }
 
@@ -217,15 +226,15 @@ function renderFallbackBracket(citations: SingleCitation[]): string {
 function renderInlineCitation(
   id: string,
   locator: { label: string; value: string } | null,
-  env: CitationEnv,
+  bibData: BibliographyData | undefined,
+  cslStyle: string | null,
 ): string {
-  const bibData = env.bibliographyData;
   if (!bibData || !bibData.ids.includes(id)) {
     return `<cite class="pandoc-citation pandoc-citation-inline pandoc-citation-warning">@${escapeHtml(id)}</cite>`;
   }
 
   const subset = new Cite(bibData.cite.data.filter((e) => e.id === id));
-  let text = String(subset.format("citation", { format: "text", template: env.cslStyle || "apa" }));
+  let text = String(subset.format("citation", { format: "text", template: cslStyle || "apa" }));
 
   // For inline citation, show "Author (Year)" style instead of "(Author, Year)"
   // Strip outer parentheses if present
@@ -297,9 +306,9 @@ function renderSingleCitationText(
 function renderBibliographyHtml(
   citedIds: string[],
   nocite: string[],
-  env: CitationEnv,
+  bibData: BibliographyData | undefined,
+  cslStyle: string | null,
 ): string {
-  const bibData = env.bibliographyData;
   if (!bibData || bibData.ids.length === 0) return "";
 
   // Determine which entries to include
@@ -328,7 +337,7 @@ function renderBibliographyHtml(
   const html = String(
     subset.format("bibliography", {
       format: "html",
-      template: env.cslStyle || "apa",
+      template: cslStyle || "apa",
     }),
   );
 
@@ -403,6 +412,51 @@ function walkTokens(tokens: Token[], fn: (token: Token) => void): void {
       walkTokens(token.children, fn);
     }
   }
+}
+
+function findRefsDivTokens(tokens: Token[]): { start: number; end: number } | null {
+  // Look for paragraph tokens containing ::: {#refs} and :::
+  // Pattern 1: single paragraph "::: {#refs}\n:::" or "::: {#refs} :::"
+  // Pattern 2: separate paragraphs for opening and closing
+  const refsPattern = /^:{3,}\s*\{[^}]*#refs[^}]*\}/;
+  const closingPattern = /^:{3,}\s*$/;
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].type !== "inline") continue;
+    const content = tokens[i].content;
+
+    if (refsPattern.test(content)) {
+      // Find the paragraph_open before this inline
+      const pOpen = i - 1;
+      if (pOpen < 0 || tokens[pOpen].type !== "paragraph_open") continue;
+
+      // Check if closing ::: is in the same paragraph
+      if (closingPattern.test(content.split("\n").pop() || "") && content.includes("\n")) {
+        // Same paragraph: paragraph_open, inline, paragraph_close
+        const pClose = i + 1;
+        if (pClose < tokens.length && tokens[pClose].type === "paragraph_close") {
+          return { start: pOpen, end: pClose };
+        }
+      }
+
+      // Look for closing ::: in subsequent paragraphs
+      for (let j = i + 2; j < tokens.length; j++) {
+        if (tokens[j].type === "inline" && closingPattern.test(tokens[j].content)) {
+          const closePClose = j + 1;
+          if (closePClose < tokens.length && tokens[closePClose].type === "paragraph_close") {
+            return { start: pOpen, end: closePClose };
+          }
+        }
+      }
+
+      // No closing found - just replace the opening paragraph
+      const pClose = i + 1;
+      if (pClose < tokens.length && tokens[pClose].type === "paragraph_close") {
+        return { start: pOpen, end: pClose };
+      }
+    }
+  }
+  return null;
 }
 
 function dirName(filePath: string): string {

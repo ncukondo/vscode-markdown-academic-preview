@@ -45,9 +45,17 @@ function defaultMetadata(): CitationMetadata {
  * - Non-frontmatter blocks must be preceded by a blank line.
  * - YAML blocks inside fenced code blocks (``` or ~~~) are excluded.
  */
-function extractYamlBlocks(document: string): string[] {
+interface YamlBlock {
+  content: string;
+  /** Start line (0-based, inclusive — the `---` opening line) */
+  startLine: number;
+  /** End line (0-based, exclusive — line after the closing `---`/`...`) */
+  endLine: number;
+}
+
+function extractYamlBlocksWithPositions(document: string): YamlBlock[] {
   const lines = document.split("\n");
-  const blocks: string[] = [];
+  const blocks: YamlBlock[] = [];
   let i = 0;
 
   while (i < lines.length) {
@@ -82,6 +90,7 @@ function extractYamlBlocks(document: string): string[] {
         i > 0 && /^\s*$/.test(lines[i - 1]);
 
       if (isFirstLine || hasPrecedingBlankLine) {
+        const startLine = i;
         // Collect YAML content until closing `---` or `...`
         const yamlLines: string[] = [];
         i++;
@@ -96,7 +105,11 @@ function extractYamlBlocks(document: string): string[] {
           i++;
         }
         if (closed && yamlLines.length > 0) {
-          blocks.push(yamlLines.join("\n"));
+          blocks.push({
+            content: yamlLines.join("\n"),
+            startLine,
+            endLine: i,
+          });
         }
         continue;
       }
@@ -106,6 +119,10 @@ function extractYamlBlocks(document: string): string[] {
   }
 
   return blocks;
+}
+
+function extractYamlBlocks(document: string): string[] {
+  return extractYamlBlocksWithPositions(document).map((b) => b.content);
 }
 
 /**
@@ -178,6 +195,16 @@ function normalizeNocite(value: unknown): string[] {
  * @param document - The full text content of a markdown document
  * @returns Merged citation metadata from all YAML blocks
  */
+/**
+ * Returns line ranges of non-frontmatter YAML blocks (blocks that appear after line 0).
+ * Each range is [startLine, endLine) (0-based).
+ */
+export function extractNonFrontmatterYamlRanges(document: string): Array<[number, number]> {
+  return extractYamlBlocksWithPositions(document)
+    .filter((b) => b.startLine > 0)
+    .map((b) => [b.startLine, b.endLine]);
+}
+
 export function extractCitationMetadata(document: string): CitationMetadata {
   const result = defaultMetadata();
   const yamlBlocks = extractYamlBlocks(document);
