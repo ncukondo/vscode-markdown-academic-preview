@@ -14,6 +14,9 @@
   "categories": [
     "Other"
   ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
   "contributes": {
     "markdown.markdownItPlugins": true
   },

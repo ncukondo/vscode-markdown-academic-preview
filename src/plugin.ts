@@ -199,6 +199,9 @@ function renderBracketCitation(
 
   const knownIds = new Set(bibData.ids);
   const allKnown = citations.every((c) => knownIds.has(c.id));
+  const knownCitations = citations.filter((c) => knownIds.has(c.id));
+  const tooltip = bibliographyTooltip(knownCitations.map((c) => c.id), bibData, cslStyle);
+  const titleAttr = tooltip ? ` title="${escapeHtml(tooltip)}"` : "";
 
   if (!allKnown) {
     // Mix of known and unknown - render what we can, warn for unknowns
@@ -210,12 +213,12 @@ function renderBracketCitation(
         parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
       }
     }
-    return `<cite class="pandoc-citation">(${parts.join("; ")})</cite>`;
+    return `<cite class="pandoc-citation"${titleAttr}>(${parts.join("; ")})</cite>`;
   }
 
   // All known - render using citation-js
   const text = renderCitationGroup(citations, bibData, cslStyle);
-  return `<cite class="pandoc-citation">${escapeHtml(text)}</cite>`;
+  return `<cite class="pandoc-citation"${titleAttr}>${escapeHtml(text)}</cite>`;
 }
 
 function renderFallbackBracket(citations: SingleCitation[]): string {
@@ -244,7 +247,10 @@ function renderInlineCitation(
     text += `, ${locator.label} ${locator.value}`;
   }
 
-  return `<cite class="pandoc-citation pandoc-citation-inline">${escapeHtml(text)}</cite>`;
+  const tooltip = bibliographyTooltip([id], bibData, cslStyle);
+  const titleAttr = tooltip ? ` title="${escapeHtml(tooltip)}"` : "";
+
+  return `<cite class="pandoc-citation pandoc-citation-inline"${titleAttr}>${escapeHtml(text)}</cite>`;
 }
 
 function renderCitationGroup(
@@ -288,6 +294,30 @@ function renderCitationGroup(
   }
 
   return text;
+}
+
+function bibliographyTooltip(
+  ids: string[],
+  bibData: BibliographyData,
+  cslStyle?: string | null,
+): string {
+  const entries = bibData.cite.data.filter((e: { id: string }) =>
+    ids.includes(e.id),
+  );
+  if (entries.length === 0) return "";
+
+  const subset = new Cite(entries);
+  try {
+    const text = String(
+      subset.format("bibliography", {
+        format: "text",
+        template: cslStyle || "apa",
+      }),
+    );
+    return text.trim();
+  } catch {
+    return "";
+  }
 }
 
 function renderSingleCitationText(
