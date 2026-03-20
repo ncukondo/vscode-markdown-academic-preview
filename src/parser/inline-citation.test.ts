@@ -110,4 +110,42 @@ describe("parseInlineCitation", () => {
       });
     });
   });
+
+  // Step 4: Edge cases
+  describe("edge cases", () => {
+    it("does not parse locator without space before bracket", () => {
+      const result = parseInlineCitation("@smith2020[p. 10]", 0);
+      expect(result).toEqual({
+        type: "inline",
+        id: "smith2020",
+        locator: null,
+        startPos: 0,
+        endPos: 10,
+      });
+    });
+
+    it("parses single-char key", () => {
+      expect(parseInlineCitation("@a", 0)).toEqual({
+        type: "inline",
+        id: "a",
+        locator: null,
+        startPos: 0,
+        endPos: 2,
+      });
+    });
+
+    it("returns null for bare @", () => {
+      expect(parseInlineCitation("@", 0)).toBeNull();
+    });
+
+    it("parses key starting with digit", () => {
+      expect(parseInlineCitation("@123", 0)).toEqual({
+        type: "inline",
+        id: "123",
+        locator: null,
+        startPos: 0,
+        endPos: 4,
+      });
+    });
+  });
 });
