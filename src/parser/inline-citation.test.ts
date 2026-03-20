@@ -76,4 +76,38 @@ describe("parseInlineCitation", () => {
       });
     });
   });
+
+  // Step 3: Trailing locator in brackets
+  describe("trailing locator in brackets", () => {
+    it("parses locator with page number", () => {
+      expect(parseInlineCitation("@smith2020 [p. 10]", 0)).toEqual({
+        type: "inline",
+        id: "smith2020",
+        locator: { label: "page", value: "10" },
+        startPos: 0,
+        endPos: 18,
+      });
+    });
+
+    it("parses locator with chapter", () => {
+      expect(parseInlineCitation("@smith2020 [chap. 3]", 0)).toEqual({
+        type: "inline",
+        id: "smith2020",
+        locator: { label: "chapter", value: "3" },
+        startPos: 0,
+        endPos: 20,
+      });
+    });
+
+    it("does not consume brackets without valid locator", () => {
+      const result = parseInlineCitation("@smith2020 [some text]", 0);
+      expect(result).toEqual({
+        type: "inline",
+        id: "smith2020",
+        locator: null,
+        startPos: 0,
+        endPos: 10,
+      });
+    });
+  });
 });

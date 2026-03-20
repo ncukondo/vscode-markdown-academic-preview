@@ -1,4 +1,5 @@
 import type { Locator } from "./locator";
+import { matchLocator } from "./locator";
 import { parseCitationKey } from "./citation-key";
 
 export interface InlineCitation {
@@ -25,11 +26,33 @@ export function parseInlineCitation(
   const keyResult = parseCitationKey(src, pos + 1);
   if (!keyResult) return null;
 
+  let locator: Locator | null = null;
+  let endPos = keyResult.endPos;
+
+  // Check for trailing locator in brackets: @key [locator]
+  // Pandoc requires a space before the opening bracket
+  if (
+    keyResult.endPos < src.length &&
+    src[keyResult.endPos] === " " &&
+    keyResult.endPos + 1 < src.length &&
+    src[keyResult.endPos + 1] === "["
+  ) {
+    const closeBracket = src.indexOf("]", keyResult.endPos + 2);
+    if (closeBracket !== -1) {
+      const bracketContent = src.slice(keyResult.endPos + 2, closeBracket);
+      const locatorResult = matchLocator(bracketContent);
+      if (locatorResult) {
+        locator = locatorResult.locator;
+        endPos = closeBracket + 1;
+      }
+    }
+  }
+
   return {
     type: "inline",
     id: keyResult.key,
-    locator: null,
+    locator,
     startPos: pos,
-    endPos: keyResult.endPos,
+    endPos,
   };
 }
