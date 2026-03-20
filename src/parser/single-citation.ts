@@ -1,0 +1,65 @@
+import type { Locator } from "./locator";
+import { matchLocator } from "./locator";
+import { parseCitationKey } from "./citation-key";
+
+export interface SingleCitation {
+  id: string;
+  prefix: string;
+  suffix: string;
+  locator: Locator | null;
+  suppressAuthor: boolean;
+}
+
+/**
+ * Parse a single citation entry (one item between semicolons inside brackets)
+ * into its structured components.
+ *
+ * @param text - The text of one citation item (between `;` separators, without surrounding brackets)
+ * @returns Parsed citation or null if no valid `@key` found
+ */
+export function parseSingleCitation(text: string): SingleCitation | null {
+  // Find the @ sign
+  const atIndex = text.indexOf("@");
+  if (atIndex === -1) return null;
+
+  // Check for suppress-author flag: `-` immediately before `@`
+  const suppressAuthor =
+    atIndex > 0 && text[atIndex - 1] === "-";
+
+  // Extract prefix: everything before the [-]@ marker
+  // Whitespace-only prefix is normalized to empty string
+  const prefixEnd = suppressAuthor ? atIndex - 1 : atIndex;
+  const rawPrefix = text.slice(0, prefixEnd);
+  const prefix = rawPrefix.trim().length === 0 ? "" : rawPrefix;
+
+  // Parse the citation key starting after @
+  const keyResult = parseCitationKey(text, atIndex + 1);
+  if (!keyResult) return null;
+
+  // Everything after the key
+  const afterKey = text.slice(keyResult.endPos);
+
+  // Check for comma indicating locator/suffix
+  let locator: Locator | null = null;
+  let suffix = "";
+
+  if (afterKey.startsWith(",")) {
+    const afterComma = afterKey.slice(1);
+    const locatorResult = matchLocator(afterComma);
+    if (locatorResult) {
+      locator = locatorResult.locator;
+      suffix = afterComma.slice(locatorResult.suffixStart);
+    } else {
+      // No recognized locator — everything after the comma is suffix
+      suffix = afterKey;
+    }
+  }
+
+  return {
+    id: keyResult.key,
+    prefix,
+    suffix,
+    locator,
+    suppressAuthor,
+  };
+}
