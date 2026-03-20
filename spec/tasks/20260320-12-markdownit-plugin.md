@@ -77,15 +77,15 @@ interface PluginOptions {
 
 ### Step 6: VS Code extension wiring
 
-- [ ] Verify `extension.ts` correctly passes options from VS Code settings to plugin
-- [ ] Verify `contributes.markdown.markdownItPlugins` activates the plugin
+- [x] Verify `extension.ts` correctly passes options from VS Code settings to plugin
+- [x] Verify `contributes.markdown.markdownItPlugins` activates the plugin
 - [ ] Manual test in VS Code
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Manual test in VS Code passes
 - [ ] Move file to `spec/tasks/completed/`

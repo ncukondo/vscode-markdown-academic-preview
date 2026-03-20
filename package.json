@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
+    "@types/node": "^25.5.0",
     "@types/vscode": "^1.80.0",
     "esbuild": "^0.25.0",
     "markdown-it": "^14.1.1",
