@@ -220,7 +220,7 @@ function renderInlineCitation(
   env: CitationEnv,
 ): string {
   const bibData = env.bibliographyData;
-  if (!bibData || !new Set(bibData.ids).has(id)) {
+  if (!bibData || !bibData.ids.includes(id)) {
     return `<cite class="pandoc-citation pandoc-citation-inline pandoc-citation-warning">@${escapeHtml(id)}</cite>`;
   }
 
@@ -287,7 +287,7 @@ function renderSingleCitationText(
   cslStyle?: string | null,
 ): string {
   const entry = bibData.cite.data.find((e) => e.id === citation.id);
-  if (!entry) return `@${escapeHtml(citation.id)}`;
+  if (!entry) return `@${citation.id}`;
   const subset = new Cite([entry]);
   let text = String(subset.format("citation", { format: "text", template: cslStyle || "apa" }));
   text = text.replace(/^\((.+)\)$/, "$1");
@@ -406,7 +406,8 @@ function walkTokens(tokens: Token[], fn: (token: Token) => void): void {
 }
 
 function dirName(filePath: string): string {
-  return filePath.replace(/\/[^/]+$/, "");
+  const idx = filePath.lastIndexOf('/');
+  return idx === -1 ? '' : filePath.slice(0, idx);
 }
 
 function escapeHtml(str: string): string {
