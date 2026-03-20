@@ -9,7 +9,11 @@
       "Bash(git *)",
       "Bash(gh *)",
       "Bash(ls *)",
-      "Bash(mkdir *)"
+      "Bash(mkdir *)",
+      "Bash(cd *)",
+      "Bash(find *)",
+      "Bash(cat *)",
+      "Bash(WORKTREE_ROOT=*)"
     ]
   }
 }
