@@ -67,13 +67,13 @@ interface PluginOptions {
 
 ### Step 5: Citations do not interfere with other markdown
 
-- [ ] Write test: email addresses not parsed as citations
-- [ ] Write test: code blocks with `@` not parsed as citations
-- [ ] Write test: links with `@` in URL not parsed as citations
-- [ ] Write test: normal markdown (headings, bold, lists) unaffected
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: email addresses not parsed as citations
+- [x] Write test: code blocks with `@` not parsed as citations
+- [x] Write test: links with `@` in URL not parsed as citations
+- [x] Write test: normal markdown (headings, bold, lists) unaffected
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 6: VS Code extension wiring
 

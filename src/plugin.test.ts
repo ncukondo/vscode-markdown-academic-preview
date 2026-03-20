@@ -206,3 +206,45 @@ Text with [@smith2020].
     expect(result).toMatch(/data-csl-entry-id="doe2019"/);
   });
 });
+
+describe("Step 5: Citations do not interfere with other markdown", () => {
+  it("does not parse email addresses as citations", () => {
+    const md = createMd();
+    const result = md.render("Contact user@example.com for info.");
+    // Should NOT contain a <cite> element
+    expect(result).not.toMatch(/<cite/);
+    // Should preserve the email text
+    expect(result).toContain("user@example.com");
+  });
+
+  it("does not parse @ in code blocks as citations", () => {
+    const md = createMd();
+    const result = md.render("```\n@smith2020\n```");
+    // Should NOT contain a <cite> element
+    expect(result).not.toMatch(/<cite/);
+    // Content should be in a code block
+    expect(result).toMatch(/<code>/);
+  });
+
+  it("does not parse @ in inline code as citations", () => {
+    const md = createMd();
+    const result = md.render("Use `@smith2020` syntax.");
+    // Should NOT contain a <cite> element inside <code>
+    expect(result).toMatch(/<code>@smith2020<\/code>/);
+  });
+
+  it("does not parse @ in link URLs as citations", () => {
+    const md = createMd();
+    const result = md.render("[link](http://example.com/@user)");
+    expect(result).not.toMatch(/<cite/);
+    expect(result).toMatch(/href="http:\/\/example\.com\/@user"/);
+  });
+
+  it("does not affect normal markdown (headings, bold, lists)", () => {
+    const md = createMd();
+    const result = md.render("# Heading\n\n**bold** text\n\n- item 1\n- item 2");
+    expect(result).toMatch(/<h1>Heading<\/h1>/);
+    expect(result).toMatch(/<strong>bold<\/strong>/);
+    expect(result).toMatch(/<li>item 1<\/li>/);
+  });
+});
