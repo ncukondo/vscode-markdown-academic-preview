@@ -34,51 +34,51 @@ function parseInlineCitation(src: string, pos: number): InlineCitation | null;
 
 ### Step 1: Basic inline citation
 
-- [ ] Write test: `"@smith2020"` at pos 0 → `{ id: "smith2020", locator: null, endPos: 10 }`
-- [ ] Write test: `"says @smith2020 and"` at pos 5 → correct id and positions
-- [ ] Write test: `"@smith2020."` → id is `"smith2020"`, endPos 10 (trailing `.` excluded)
-- [ ] Write test: not starting with `@` → `null`
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"@smith2020"` at pos 0 → `{ id: "smith2020", locator: null, endPos: 10 }`
+- [x] Write test: `"says @smith2020 and"` at pos 5 → correct id and positions
+- [x] Write test: `"@smith2020."` → id is `"smith2020"`, endPos 10 (trailing `.` excluded)
+- [x] Write test: not starting with `@` → `null`
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: Word boundary check
 
 The `@` must not be preceded by a word character (to avoid matching email addresses etc.).
 
-- [ ] Write test: `"email@example"` at pos 5 → `null`
-- [ ] Write test: `"a @smith"` at pos 2 → valid
-- [ ] Write test: `"@smith"` at pos 0 (start of string) → valid
-- [ ] Write test: `"(@smith)"` at pos 1 → valid (preceded by non-word char)
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"email@example"` at pos 5 → `null`
+- [x] Write test: `"a @smith"` at pos 2 → valid
+- [x] Write test: `"@smith"` at pos 0 (start of string) → valid
+- [x] Write test: `"(@smith)"` at pos 1 → valid (preceded by non-word char)
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: Trailing locator in brackets
 
 `@key [p. 10]` — a bracket immediately following the key is parsed as a locator.
 
-- [ ] Write test: `"@smith2020 [p. 10]"` → `{ id: "smith2020", locator: { label: "page", value: "10" }, endPos: 18 }`
-- [ ] Write test: `"@smith2020 [chap. 3]"` → locator with chapter
-- [ ] Write test: `"@smith2020 [some text]"` → no valid locator → locator null, endPos after key only (brackets not consumed)
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"@smith2020 [p. 10]"` → `{ id: "smith2020", locator: { label: "page", value: "10" }, endPos: 18 }`
+- [x] Write test: `"@smith2020 [chap. 3]"` → locator with chapter
+- [x] Write test: `"@smith2020 [some text]"` → no valid locator → locator null, endPos after key only (brackets not consumed)
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 4: Edge cases
 
-- [ ] Write test: `"@smith2020[p. 10]"` → no space before `[` — still parse locator? (Pandoc requires space — `null` locator, endPos after key)
-- [ ] Write test: `"@a"` → valid (single-char key)
-- [ ] Write test: `"@"` → `null` (no key)
-- [ ] Write test: `"@123"` → valid (starts with digit)
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `"@smith2020[p. 10]"` → no space before `[` — still parse locator? (Pandoc requires space — `null` locator, endPos after key)
+- [x] Write test: `"@a"` → valid (single-char key)
+- [x] Write test: `"@"` → `null` (no key)
+- [x] Write test: `"@123"` → valid (starts with digit)
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
