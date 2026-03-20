@@ -111,4 +111,27 @@ describe("parseSingleCitation", () => {
       });
     });
   });
+
+  // Step 5: Suffix text
+  describe("suffix text", () => {
+    it('parses "@smith2020, p. 10, and *passim*" with locator and suffix', () => {
+      expect(parseSingleCitation("@smith2020, p. 10, and *passim*")).toEqual({
+        id: "smith2020",
+        prefix: "",
+        suffix: ", and *passim*",
+        locator: { label: "page", value: "10" },
+        suppressAuthor: false,
+      });
+    });
+
+    it('parses "@smith2020, see also" with no locator, all as suffix', () => {
+      expect(parseSingleCitation("@smith2020, see also")).toEqual({
+        id: "smith2020",
+        prefix: "",
+        suffix: ", see also",
+        locator: null,
+        suppressAuthor: false,
+      });
+    });
+  });
 });
