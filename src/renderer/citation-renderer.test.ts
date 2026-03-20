@@ -116,6 +116,13 @@ describe("renderCitation", () => {
     });
   });
 
+  describe("Empty items array", () => {
+    it("returns empty string when items array is empty", () => {
+      const result = renderCitation([], defaultOptions());
+      expect(result).toBe("");
+    });
+  });
+
   describe("Step 6: Custom CSL style", () => {
     it("renders with custom CSL XML (vancouver/numeric)", () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports

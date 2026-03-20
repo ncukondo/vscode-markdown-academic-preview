@@ -54,6 +54,10 @@ export function renderCitation(
   const knownIds = new Set(bibliographyData.ids);
   const unknownItems = items.filter((item) => !knownIds.has(item.id));
 
+  if (items.length === 0) {
+    return "";
+  }
+
   if (unknownItems.length === items.length) {
     return `[?${items.map((i) => i.id).join("; ")}]`;
   }
