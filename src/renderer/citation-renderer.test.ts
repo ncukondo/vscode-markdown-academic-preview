@@ -3,10 +3,7 @@ import { Cite } from "@citation-js/core";
 import "@citation-js/plugin-bibtex";
 import "@citation-js/plugin-csl";
 import { renderCitation } from "./citation-renderer";
-import type {
-  CitationRenderItem,
-  CitationRenderOptions,
-} from "./citation-renderer";
+import type { CitationRenderOptions } from "./citation-renderer";
 
 function makeBibData(
   entries: Array<{
@@ -105,6 +102,17 @@ describe("renderCitation", () => {
         defaultOptions(),
       );
       expect(result).toBe("(Doe, 2019; Smith, 2020)");
+    });
+  });
+
+  describe("Mixed known/unknown items", () => {
+    it("renders known items and appends unknown placeholders", () => {
+      const result = renderCitation(
+        [{ id: "smith2020" }, { id: "nonexistent" }],
+        defaultOptions(),
+      );
+      expect(result).toContain("Smith, 2020");
+      expect(result).toContain("?nonexistent");
     });
   });
 

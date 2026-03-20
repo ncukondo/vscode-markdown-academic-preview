@@ -25,7 +25,7 @@ export interface CitationRenderItem {
   suppressAuthor?: boolean;
 }
 
-interface CiteproceItem {
+interface CiteprocItem {
   id: string;
   locator?: string;
   label?: string;
@@ -34,8 +34,8 @@ interface CiteproceItem {
   "suppress-author"?: boolean;
 }
 
-function toCiteprocEntry(item: CitationRenderItem): CiteproceItem {
-  const entry: CiteproceItem = { id: item.id };
+function toCiteprocEntry(item: CitationRenderItem): CiteprocItem {
+  const entry: CiteprocItem = { id: item.id };
   if (item.locator) {
     entry.locator = item.locator.value;
     entry.label = item.locator.label;
