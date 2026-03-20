@@ -87,4 +87,4 @@ function loadBibliography(options: LoadOptions): BibliographyData;
 - [x] Lint passes
 - [x] Type check passes
 - [x] Build succeeds
-- [x] Move file to `spec/tasks/completed/`
+- [ ] Move file to `spec/tasks/completed/`
