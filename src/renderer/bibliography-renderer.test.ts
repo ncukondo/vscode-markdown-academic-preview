@@ -96,4 +96,41 @@ describe("renderBibliography", () => {
       expect(result).toContain("Adams");
     });
   });
+
+  describe("Step 4: Custom CSL style", () => {
+    it("renders with custom CSL XML producing different output", () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { plugins } = require("@citation-js/core");
+      const vancouverXml: string = plugins.config.get("@csl").templates.get("vancouver");
+
+      const defaultResult = renderBibliography({
+        bibliographyData: threeEntries(),
+        citedIds: ["smith2020"],
+        nocite: [],
+        cslStyle: null,
+      });
+
+      const customResult = renderBibliography({
+        bibliographyData: threeEntries(),
+        citedIds: ["smith2020"],
+        nocite: [],
+        cslStyle: vancouverXml,
+      });
+
+      // Vancouver and APA produce different formatting
+      expect(customResult).toContain("Smith");
+      expect(customResult).not.toBe(defaultResult);
+    });
+
+    it("uses default APA style when cslStyle is null", () => {
+      const result = renderBibliography({
+        bibliographyData: threeEntries(),
+        citedIds: ["smith2020"],
+        nocite: [],
+        cslStyle: null,
+      });
+      // APA bibliography includes author name
+      expect(result).toContain("Smith");
+    });
+  });
 });
