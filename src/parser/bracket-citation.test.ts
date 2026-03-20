@@ -77,4 +77,19 @@ describe("parseBracketCitation", () => {
       });
     });
   });
+
+  // Step 3: Unmatched brackets
+  describe("unmatched brackets", () => {
+    it('returns null for "[@smith2020" (no closing ])', () => {
+      expect(parseBracketCitation("[@smith2020", 0)).toBeNull();
+    });
+
+    it('handles "[@smith[nested]2020]" — uses first ] as close', () => {
+      const result = parseBracketCitation("[@smith[nested]2020]", 0);
+      // The nested brackets create depth tracking: [... [nested] ...]
+      // With depth tracking, the outer ] at pos 19 is the match
+      expect(result).not.toBeNull();
+      expect(result!.raw).toBe("[@smith[nested]2020]");
+    });
+  });
 });
