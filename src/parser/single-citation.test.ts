@@ -134,4 +134,29 @@ describe("parseSingleCitation", () => {
       });
     });
   });
+
+  // Step 6: Full combination
+  describe("full combination", () => {
+    it('parses "see @smith2020, pp. 10-15, and *passim*" with all fields', () => {
+      expect(
+        parseSingleCitation("see @smith2020, pp. 10-15, and *passim*")
+      ).toEqual({
+        id: "smith2020",
+        prefix: "see ",
+        suffix: ", and *passim*",
+        locator: { label: "page", value: "10-15" },
+        suppressAuthor: false,
+      });
+    });
+
+    it('parses "e.g., -@doe2019, chap. 3" with prefix, suppressAuthor, and locator', () => {
+      expect(parseSingleCitation("e.g., -@doe2019, chap. 3")).toEqual({
+        id: "doe2019",
+        prefix: "e.g., ",
+        suffix: "",
+        locator: { label: "chapter", value: "3" },
+        suppressAuthor: true,
+      });
+    });
+  });
 });
