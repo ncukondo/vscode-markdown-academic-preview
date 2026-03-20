@@ -41,11 +41,11 @@ interface PluginOptions {
 
 ### Step 2: Inline citation rendering in markdown-it
 
-- [ ] Write test: `md.render("@smith2020 says")` with loaded bib → HTML contains author-style citation
-- [ ] Write test: `md.render("@smith2020 [p. 10] says")` → citation with locator
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `md.render("@smith2020 says")` with loaded bib → HTML contains author-style citation
+- [x] Write test: `md.render("@smith2020 [p. 10] says")` → citation with locator
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: Bibliography injection
 
