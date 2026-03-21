@@ -16,6 +16,10 @@
 | 9 | [Citation renderer](completed/20260320-10-citation-renderer.md) | Done | [ADR-001](../decisions/ADR-001-citation-js-for-rendering.md) |
 | 10 | [Bibliography renderer](completed/20260320-11-bibliography-renderer.md) | Done | [ADR-001](../decisions/ADR-001-citation-js-for-rendering.md) |
 | 11 | [markdown-it plugin integration](completed/20260320-12-markdownit-plugin.md) | Done | — |
+| 12 | [Extension settings — file resolution](20260321-13-settings-file-resolution.md) | Planned | — |
+| 13 | [Extension settings — enabled toggle](20260321-14-settings-enabled.md) | Planned | — |
+| 14 | [Extension settings — locale](20260321-15-settings-locale.md) | Planned | — |
+| 15 | [Extension settings — popover toggle](20260321-16-settings-popover.md) | Planned | — |
 
 ## Dependency Graph
 
@@ -32,3 +36,13 @@ Phase 6 (yaml) ──→ Phase 7 (resolver) ──→ Phase 8 (bib loader)
 ```
 
 Phases 1, 2, 6 can be started independently.
+
+```
+Phase 11 (plugin) ──→ Phase 12 (file resolution settings)
+                  ──→ Phase 13 (enabled toggle)
+                  ──→ Phase 14 (locale)
+                  ──→ Phase 15 (popover toggle)
+```
+
+Phases 12–15 depend on Phase 11 but are independent of each other.
+Phase 12 should be done first as it establishes the configuration infrastructure.
