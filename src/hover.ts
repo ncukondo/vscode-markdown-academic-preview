@@ -5,6 +5,7 @@ import "@citation-js/plugin-csl";
 import { parseCitationKey } from "./parser/citation-key";
 import { extractCitationMetadata } from "./metadata/yaml-extractor";
 import { loadBibliographySync } from "./resolver/bibliography";
+import type { BibliographyCache } from "./resolver/bibliography-cache";
 import {
   resolvePath,
   resolveDefaultBibliography,
@@ -34,6 +35,7 @@ export interface HoverProviderOptions {
   defaultBibliography?: string[];
   defaultCsl?: string;
   locale?: string;
+  bibliographyCache?: BibliographyCache;
 }
 
 export function createCitationHoverProvider(
@@ -73,11 +75,16 @@ export function createCitationHoverProvider(
         }
       }
 
-      const bibData = loadBibliographySync({
-        bibliographyPaths: bibPaths,
-        inlineReferences: metadata.references,
-        readFile: (p: string) => fs.readFileSync(p, "utf-8"),
-      });
+      const bibData = options.bibliographyCache
+        ? options.bibliographyCache.load({
+            bibliographyPaths: bibPaths,
+            inlineReferences: metadata.references,
+          })
+        : loadBibliographySync({
+            bibliographyPaths: bibPaths,
+            inlineReferences: metadata.references,
+            readFile: (p: string) => fs.readFileSync(p, "utf-8"),
+          });
 
       if (!bibData.ids.includes(citationKey)) return null;
 

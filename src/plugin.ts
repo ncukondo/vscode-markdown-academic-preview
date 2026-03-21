@@ -11,6 +11,7 @@ import {
   type BibliographyData,
   loadBibliographySync,
 } from "./resolver/bibliography";
+import type { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
@@ -27,6 +28,7 @@ export interface PluginOptions {
   popoverEnabled?: boolean;
   readFileSync?: (path: string) => string;
   existsSync?: (path: string) => boolean;
+  bibliographyCache?: BibliographyCache;
 }
 
 export function pandocCitationPlugin(
@@ -103,13 +105,18 @@ export function pandocCitationPlugin(
     // Extract YAML metadata from source
     const metadata = extractCitationMetadata(state.src);
 
-    // Load bibliography synchronously
+    // Load bibliography synchronously (with caching if available)
     const bibPaths = resolveBibliographyPaths(metadata.bibliography, opts);
-    const bibData = loadBibliographySync({
-      bibliographyPaths: bibPaths,
-      inlineReferences: metadata.references,
-      readFile: opts.readFileSync || (() => ""),
-    });
+    const bibData = opts.bibliographyCache
+      ? opts.bibliographyCache.load({
+          bibliographyPaths: bibPaths,
+          inlineReferences: metadata.references,
+        })
+      : loadBibliographySync({
+          bibliographyPaths: bibPaths,
+          inlineReferences: metadata.references,
+          readFile: opts.readFileSync || (() => ""),
+        });
 
     // Store in closure for renderers
     currentBibData = bibData;

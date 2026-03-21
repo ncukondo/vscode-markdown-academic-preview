@@ -24,6 +24,21 @@ function isYamlFile(filePath: string): boolean {
   return /\.ya?ml$/i.test(filePath);
 }
 
+function isJsonFile(filePath: string): boolean {
+  return /\.json$/i.test(filePath);
+}
+
+function parseContent(content: string, filePath: string): unknown {
+  if (isYamlFile(filePath)) {
+    return parseYaml(content);
+  }
+  if (isJsonFile(filePath)) {
+    return JSON.parse(content);
+  }
+  // BibTeX and other formats: pass as string for citation-js to parse
+  return content;
+}
+
 export async function loadBibliography(
   options: LoadOptions,
 ): Promise<BibliographyData> {
@@ -32,14 +47,9 @@ export async function loadBibliography(
   for (const filePath of options.bibliographyPaths) {
     try {
       const content = await options.readFile(filePath);
-      if (isYamlFile(filePath)) {
-        const data = parseYaml(content);
-        cite.add(data);
-      } else {
-        cite.add(content);
-      }
-    } catch {
-      // Skip files that fail to read or parse
+      cite.add(parseContent(content, filePath));
+    } catch (e) {
+      console.warn(`[pandoc-citation-preview] Failed to load bibliography: ${filePath}`, e);
     }
   }
 
@@ -62,14 +72,10 @@ export function loadBibliographySync(
     try {
       const content = options.readFile(filePath);
       if (content) {
-        if (isYamlFile(filePath)) {
-          cite.add(parseYaml(content));
-        } else {
-          cite.add(content);
-        }
+        cite.add(parseContent(content, filePath));
       }
-    } catch {
-      // Skip files that fail to read or parse
+    } catch (e) {
+      console.warn(`[pandoc-citation-preview] Failed to load bibliography: ${filePath}`, e);
     }
   }
 
