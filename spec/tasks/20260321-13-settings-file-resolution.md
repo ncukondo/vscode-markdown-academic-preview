@@ -33,11 +33,11 @@ Each step follows Red-Green-Refactor.
 
 ### Step 2: Read settings in extension.ts and pass to plugin options
 
-- [ ] Write test: settings reader helper function (mock `getConfiguration`)
-- [ ] Implement: read values from `vscode.workspace.getConfiguration("pandocCitationPreview")`
-- [ ] Pass settings to `PluginOptions` in `extendMarkdownIt`
-- [ ] Pass settings to `createCitationHoverProvider`
-- [ ] Lint & type check
+- [x] Write test: settings reader helper function (mock `getConfiguration`)
+- [x] Implement: read values from `vscode.workspace.getConfiguration("pandocCitationPreview")`
+- [x] Pass settings to `PluginOptions` in `extendMarkdownIt`
+- [x] Pass settings to `createCitationHoverProvider`
+- [x] Lint & type check
 
 ### Step 3: defaultCsl behavior
 
