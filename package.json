@@ -69,6 +69,11 @@
           },
           "default": [],
           "description": "Directories to search when resolving CSL style file paths."
+        },
+        "pandocCitationPreview.locale": {
+          "type": "string",
+          "default": "",
+          "description": "Locale for citation rendering (e.g. \"en-US\", \"ja-JP\", \"de-DE\"). Empty string uses the default (en-US)."
         }
       }
     }

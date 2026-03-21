@@ -17,9 +17,9 @@ Each step follows Red-Green-Refactor.
 
 ### Step 1: Add locale setting to package.json
 
-- [ ] Define `pandocCitationPreview.locale`: `string` (default: `""`)
-- [ ] Add description (examples: `"en-US"`, `"ja-JP"`, `"de-DE"`)
-- [ ] Empty string means citation-js default (en-US)
+- [x] Define `pandocCitationPreview.locale`: `string` (default: `""`)
+- [x] Add description (examples: `"en-US"`, `"ja-JP"`, `"de-DE"`)
+- [x] Empty string means citation-js default (en-US)
 
 ### Step 2: Add locale support to citation-renderer
 
