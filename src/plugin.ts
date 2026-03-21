@@ -11,7 +11,7 @@ import {
   type BibliographyData,
   loadBibliographySync,
 } from "./resolver/bibliography";
-import { resolvePath, resolveDefaultBibliography } from "./resolver/file-resolver";
+import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 
@@ -464,19 +464,11 @@ function loadCslStyle(
   // Fall back to defaultCsl setting
   if (!opts.defaultCsl) return null;
 
-  // Try to resolve as a file path first
-  if (opts.readFileSync && opts.existsSync) {
-    const resolved = resolvePath(opts.defaultCsl, context);
-    if (resolved) {
-      try {
-        return opts.readFileSync(resolved);
-      } catch {
-        // fall through to built-in name
-      }
-    }
+  if (opts.readFileSync) {
+    return resolveDefaultCsl(opts.defaultCsl, context, opts.readFileSync);
   }
 
-  // Treat as a built-in style name (e.g. "ieee", "vancouver")
+  // No readFileSync available — treat as built-in style name
   return opts.defaultCsl;
 }
 

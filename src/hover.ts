@@ -8,6 +8,7 @@ import { loadBibliographySync } from "./resolver/bibliography";
 import {
   resolvePath,
   resolveDefaultBibliography,
+  resolveDefaultCsl,
 } from "./resolver/file-resolver";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 
@@ -93,19 +94,11 @@ export function createCitationHoverProvider(
         }
       }
       if (!cslStyle && options.defaultCsl) {
-        // Try to resolve as a file path first
-        const resolved = resolvePath(options.defaultCsl, cslCtx);
-        if (resolved) {
-          try {
-            cslStyle = fs.readFileSync(resolved, "utf-8");
-          } catch {
-            // fall through to built-in name
-          }
-        }
-        // If not a file, treat as built-in style name
-        if (!cslStyle) {
-          cslStyle = options.defaultCsl;
-        }
+        cslStyle = resolveDefaultCsl(
+          options.defaultCsl,
+          cslCtx,
+          (p) => fs.readFileSync(p, "utf-8"),
+        );
       }
 
       // Format single bibliography entry (same as bibliography section)
