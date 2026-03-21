@@ -17,28 +17,28 @@ Each step follows Red-Green-Refactor.
 
 ### Step 1: Add enabled setting to package.json
 
-- [ ] Define `pandocCitationPreview.enabled`: `boolean` (default: `true`)
-- [ ] Add description
+- [x] Define `pandocCitationPreview.enabled`: `boolean` (default: `true`)
+- [x] Add description
 
 ### Step 2: Handle enabled flag in plugin.ts
 
-- [ ] Write test: `enabled: false` → markdown-it plugin does not process citations (raw text preserved)
-- [ ] Write test: `enabled: true` (default) → normal operation
-- [ ] Add `enabled` to `PluginOptions`
-- [ ] Implement: early return when `enabled === false`
-- [ ] Lint & type check
+- [x] Write test: `enabled: false` → markdown-it plugin does not process citations (raw text preserved)
+- [x] Write test: `enabled: true` (default) → normal operation
+- [x] Add `enabled` to `PluginOptions`
+- [x] Implement: early return when `enabled === false`
+- [x] Lint & type check
 
 ### Step 3: Wire up in extension.ts
 
-- [ ] Read `enabled` from `vscode.workspace.getConfiguration`
-- [ ] Pass to `PluginOptions` and `HoverProviderOptions`
-- [ ] Hover provider returns null when `enabled === false`
-- [ ] Lint & type check
+- [x] Read `enabled` from `vscode.workspace.getConfiguration`
+- [x] Pass to `PluginOptions` and `HoverProviderOptions`
+- [x] Hover provider returns null when `enabled === false`
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`

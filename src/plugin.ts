@@ -16,6 +16,7 @@ import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 
 export interface PluginOptions {
+  enabled?: boolean;
   mdFilePath?: string;
   workspaceRoot?: string;
   searchDirectories?: string[];
@@ -31,6 +32,9 @@ export function pandocCitationPlugin(
   options?: PluginOptions,
 ): void {
   const opts = options ?? {};
+
+  // Skip all processing when extension is disabled
+  if (opts.enabled === false) return;
 
   // Shared state between core rule and renderers via closure
   // (VS Code may use different env objects for parse and render)

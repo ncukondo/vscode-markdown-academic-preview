@@ -41,6 +41,11 @@
     "configuration": {
       "title": "Pandoc Citation Preview",
       "properties": {
+        "pandocCitationPreview.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the Pandoc Citation Preview extension for the current workspace."
+        },
         "pandocCitationPreview.defaultCsl": {
           "type": "string",
           "default": "",
