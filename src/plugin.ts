@@ -16,6 +16,7 @@ import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 
 export interface PluginOptions {
+  enabled?: boolean;
   mdFilePath?: string;
   workspaceRoot?: string;
   searchDirectories?: string[];
@@ -23,6 +24,7 @@ export interface PluginOptions {
   defaultBibliography?: string[];
   defaultCsl?: string;
   locale?: string;
+  popoverEnabled?: boolean;
   readFileSync?: (path: string) => string;
   existsSync?: (path: string) => boolean;
 }
@@ -32,6 +34,9 @@ export function pandocCitationPlugin(
   options?: PluginOptions,
 ): void {
   const opts = options ?? {};
+
+  // Skip all processing when extension is disabled
+  if (opts.enabled === false) return;
 
   // Shared state between core rule and renderers via closure
   // (VS Code may use different env objects for parse and render)
@@ -161,6 +166,7 @@ export function pandocCitationPlugin(
 
   // --- Renderers ---
 
+  const popoverEnabled = opts.popoverEnabled !== false;
   const getPopoverId = () => `pandoc-popover-${popoverCounter++}`;
 
   md.renderer.rules["pandoc_citation"] = (
@@ -168,7 +174,7 @@ export function pandocCitationPlugin(
     idx: number,
   ) => {
     const citations: SingleCitation[] = JSON.parse(tokens[idx].content);
-    return renderBracketCitation(citations, currentBibData, currentCslStyle, getPopoverId, currentLocale);
+    return renderBracketCitation(citations, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale);
   };
 
   md.renderer.rules["pandoc_citation_inline"] = (
@@ -176,7 +182,7 @@ export function pandocCitationPlugin(
     idx: number,
   ) => {
     const data = JSON.parse(tokens[idx].content);
-    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, getPopoverId, currentLocale);
+    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale);
   };
 
   md.renderer.rules["pandoc_bibliography"] = (
@@ -200,7 +206,7 @@ function renderBracketCitation(
   citations: SingleCitation[],
   bibData: BibliographyData | undefined,
   cslStyle: string | null,
-  getPopoverId: () => string,
+  getPopoverId: (() => string) | null,
   locale?: string,
 ): string {
   if (!bibData || bibData.ids.length === 0) {
@@ -210,7 +216,7 @@ function renderBracketCitation(
   const knownIds = new Set(bibData.ids);
   const allKnown = citations.every((c) => knownIds.has(c.id));
   const knownCitations = citations.filter((c) => knownIds.has(c.id));
-  const tooltipHtml = bibliographyTooltipHtml(knownCitations.map((c) => c.id), bibData, cslStyle, locale);
+  const tooltipHtml = getPopoverId ? bibliographyTooltipHtml(knownCitations.map((c) => c.id), bibData, cslStyle, locale) : "";
   const popover = buildPopover(tooltipHtml, getPopoverId, knownCitations[0]?.id);
 
   if (!allKnown) {
@@ -242,7 +248,7 @@ function renderInlineCitation(
   locator: { label: string; value: string } | null,
   bibData: BibliographyData | undefined,
   cslStyle: string | null,
-  getPopoverId: () => string,
+  getPopoverId: (() => string) | null,
   locale?: string,
 ): string {
   if (!bibData || !bibData.ids.includes(id)) {
@@ -261,7 +267,7 @@ function renderInlineCitation(
     text += `, ${locator.label} ${locator.value}`;
   }
 
-  const tooltipHtml = bibliographyTooltipHtml([id], bibData, cslStyle, locale);
+  const tooltipHtml = getPopoverId ? bibliographyTooltipHtml([id], bibData, cslStyle, locale) : "";
   const popover = buildPopover(tooltipHtml, getPopoverId, id);
 
   return `<cite class="pandoc-citation pandoc-citation-inline">${popover.wrapInvoker(escapeHtml(text))}</cite>${popover.element}`;
@@ -341,10 +347,10 @@ function bibliographyTooltipHtml(
 
 function buildPopover(
   tooltipHtml: string,
-  getPopoverId: () => string,
+  getPopoverId: (() => string) | null,
   refId?: string,
 ): { wrapInvoker: (content: string) => string; element: string } {
-  if (!tooltipHtml) {
+  if (!tooltipHtml || !getPopoverId) {
     return {
       wrapInvoker: (content) => content,
       element: "",

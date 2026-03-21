@@ -418,6 +418,89 @@ bibliography: /refs.bib
   });
 });
 
+describe("Settings: popoverEnabled", () => {
+  it("does not render popover elements when popoverEnabled is false", () => {
+    const md = createMd({ popoverEnabled: false });
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).not.toMatch(/pandoc-citation-popover/);
+    expect(result).not.toMatch(/interestfor=/);
+    expect(result).not.toMatch(/popover="hint"/);
+  });
+
+  it("still renders citation text correctly when popoverEnabled is false", () => {
+    const md = createMd({ popoverEnabled: false });
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*2020.*<\/cite>/s);
+  });
+
+  it("renders popovers by default (popoverEnabled not set)", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/pandoc-citation-popover/);
+    expect(result).toMatch(/interestfor=/);
+  });
+
+  it("renders popovers when popoverEnabled is true", () => {
+    const md = createMd({ popoverEnabled: true });
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/pandoc-citation-popover/);
+    expect(result).toMatch(/interestfor=/);
+  });
+
+  it("inline citation has no popover when popoverEnabled is false", () => {
+    const md = createMd({ popoverEnabled: false });
+    const src = INLINE_REFS_DOC + "@smith2020 says something.";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*class="[^"]*pandoc-citation-inline[^"]*"[^>]*>.*Smith.*<\/cite>/s);
+    expect(result).not.toMatch(/pandoc-citation-popover/);
+    expect(result).not.toMatch(/interestfor=/);
+  });
+});
+
+describe("Settings: enabled", () => {
+  it("does not process citations when enabled is false", () => {
+    const md = createMd({ enabled: false });
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    // Raw citation text should be preserved, no <cite> elements
+    expect(result).not.toMatch(/<cite/);
+    expect(result).toContain("[@smith2020]");
+  });
+
+  it("does not process inline citations when enabled is false", () => {
+    const md = createMd({ enabled: false });
+    const src = INLINE_REFS_DOC + "@smith2020 says something.";
+    const result = md.render(src);
+    expect(result).not.toMatch(/<cite/);
+    expect(result).toContain("@smith2020");
+  });
+
+  it("does not inject bibliography when enabled is false", () => {
+    const md = createMd({ enabled: false });
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).not.toMatch(/class="csl-bib-body"/);
+  });
+
+  it("processes citations normally when enabled is true", () => {
+    const md = createMd({ enabled: true });
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*2020.*<\/cite>/s);
+  });
+
+  it("processes citations normally when enabled is not specified (defaults to true)", () => {
+    const md = createMd({});
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*2020.*<\/cite>/s);
+  });
+});
+
 describe("Settings: searchDirectories", () => {
   it("resolves bibliography from searchDirectories", () => {
     const md = createMd({

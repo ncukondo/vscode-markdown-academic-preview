@@ -27,6 +27,7 @@ const cslConfig = plugins.config.get("@csl");
 const CUSTOM_TEMPLATE_KEY = "__pandoc-citation-preview-hover__";
 
 export interface HoverProviderOptions {
+  enabled?: boolean;
   workspaceRoot?: string;
   searchDirectories?: string[];
   cslSearchDirectories?: string[];
@@ -40,6 +41,8 @@ export function createCitationHoverProvider(
 ): vscode.HoverProvider {
   return {
     provideHover(document, position) {
+      if (options.enabled === false) return null;
+
       const citationKey = findCitationKeyAtPosition(document, position);
       if (!citationKey) return null;
 
