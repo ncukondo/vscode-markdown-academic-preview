@@ -40,5 +40,5 @@ Each step follows Red-Green-Refactor.
 - [x] All tests pass
 - [x] Lint passes
 - [x] Type check passes
-- [ ] Build succeeds
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
