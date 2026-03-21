@@ -30,15 +30,15 @@ Each step follows Red-Green-Refactor.
 
 ### Step 3: Wire up in extension.ts
 
-- [ ] Read `enabled` from `vscode.workspace.getConfiguration`
-- [ ] Pass to `PluginOptions` and `HoverProviderOptions`
-- [ ] Hover provider returns null when `enabled === false`
-- [ ] Lint & type check
+- [x] Read `enabled` from `vscode.workspace.getConfiguration`
+- [x] Pass to `PluginOptions` and `HoverProviderOptions`
+- [x] Hover provider returns null when `enabled === false`
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`

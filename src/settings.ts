@@ -1,4 +1,5 @@
 export interface ExtensionSettings {
+  enabled: boolean;
   defaultCsl?: string;
   defaultBibliography?: string[];
   searchDirectories?: string[];
@@ -10,7 +11,10 @@ export interface ConfigGetter {
 }
 
 export function readExtensionSettings(config: ConfigGetter): ExtensionSettings {
-  const settings: ExtensionSettings = {};
+  const enabled = config.get<boolean>("enabled");
+  const settings: ExtensionSettings = {
+    enabled: enabled !== false,
+  };
 
   const defaultCsl = config.get<string>("defaultCsl");
   if (defaultCsl) {
