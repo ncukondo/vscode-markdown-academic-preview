@@ -15,6 +15,7 @@ const cslConfig = plugins.config.get("@csl");
 export interface CitationRenderOptions {
   bibliographyData: BibliographyData;
   cslStyle: string | null;
+  locale?: string;
 }
 
 export interface CitationRenderItem {
@@ -75,6 +76,7 @@ export function renderCitation(
     const result = bibliographyData.cite.format("citation", {
       entry,
       template,
+      ...(options.locale ? { lang: options.locale } : {}),
     }) as string;
 
     if (unknownItems.length > 0) {

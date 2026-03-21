@@ -23,11 +23,11 @@ Each step follows Red-Green-Refactor.
 
 ### Step 2: Add locale support to citation-renderer
 
-- [ ] Write test: `lang: "de-DE"` produces different output (e.g. "und" instead of "and")
-- [ ] Add `locale?: string` to `CitationRenderOptions`
-- [ ] Pass `lang` option to `format()` call in `renderCitation`
-- [ ] Implement
-- [ ] Lint & type check
+- [x] Write test: `lang: "de-DE"` produces different output (e.g. "und" instead of "and")
+- [x] Add `locale?: string` to `CitationRenderOptions`
+- [x] Pass `lang` option to `format()` call in `renderCitation`
+- [x] Implement
+- [x] Lint & type check
 
 ### Step 3: Add locale support to bibliography-renderer
 

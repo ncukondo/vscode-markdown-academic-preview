@@ -146,4 +146,23 @@ describe("renderCitation", () => {
       expect(result).toBe("(Smith, 2020)");
     });
   });
+
+  describe("Locale support", () => {
+    it("accepts locale option without error", () => {
+      const result = renderCitation(
+        [{ id: "smith2020" }],
+        { bibliographyData: defaultBib(), cslStyle: null, locale: "de-DE" },
+      );
+      expect(result).toContain("Smith");
+      expect(result).toContain("2020");
+    });
+
+    it("uses default locale when locale is undefined", () => {
+      const result = renderCitation(
+        [{ id: "smith2020" }],
+        { bibliographyData: defaultBib(), cslStyle: null },
+      );
+      expect(result).toBe("(Smith, 2020)");
+    });
+  });
 });
