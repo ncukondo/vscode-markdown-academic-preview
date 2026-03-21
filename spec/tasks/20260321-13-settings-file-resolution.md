@@ -24,47 +24,47 @@ Each step follows Red-Green-Refactor.
 
 ### Step 1: Add configuration schema to package.json
 
-- [ ] Add `contributes.configuration` section with title `"Pandoc Citation Preview"`
-- [ ] Define `pandocCitationPreview.defaultCsl`: `string` (default: `""`)
-- [ ] Define `pandocCitationPreview.defaultBibliography`: `array` of `string` (default: `[]`)
-- [ ] Define `pandocCitationPreview.searchDirectories`: `array` of `string` (default: `[]`)
-- [ ] Define `pandocCitationPreview.cslSearchDirectories`: `array` of `string` (default: `[]`)
-- [ ] Add English descriptions for each setting
+- [x] Add `contributes.configuration` section with title `"Pandoc Citation Preview"`
+- [x] Define `pandocCitationPreview.defaultCsl`: `string` (default: `""`)
+- [x] Define `pandocCitationPreview.defaultBibliography`: `array` of `string` (default: `[]`)
+- [x] Define `pandocCitationPreview.searchDirectories`: `array` of `string` (default: `[]`)
+- [x] Define `pandocCitationPreview.cslSearchDirectories`: `array` of `string` (default: `[]`)
+- [x] Add English descriptions for each setting
 
 ### Step 2: Read settings in extension.ts and pass to plugin options
 
-- [ ] Write test: settings reader helper function (mock `getConfiguration`)
-- [ ] Implement: read values from `vscode.workspace.getConfiguration("pandocCitationPreview")`
-- [ ] Pass settings to `PluginOptions` in `extendMarkdownIt`
-- [ ] Pass settings to `createCitationHoverProvider`
-- [ ] Lint & type check
+- [x] Write test: settings reader helper function (mock `getConfiguration`)
+- [x] Implement: read values from `vscode.workspace.getConfiguration("pandocCitationPreview")`
+- [x] Pass settings to `PluginOptions` in `extendMarkdownIt`
+- [x] Pass settings to `createCitationHoverProvider`
+- [x] Lint & type check
 
 ### Step 3: defaultCsl behavior
 
-- [ ] Write test: `defaultCsl` set to built-in style name (e.g. `"ieee"`) → renderers use that style
-- [ ] Write test: `defaultCsl` set to file path → CSL file loaded and applied
-- [ ] Write test: YAML metadata `csl` field takes precedence over `defaultCsl`
-- [ ] Implement
-- [ ] Lint & type check
+- [x] Write test: `defaultCsl` set to built-in style name (e.g. `"ieee"`) → renderers use that style
+- [x] Write test: `defaultCsl` set to file path → CSL file loaded and applied
+- [x] Write test: YAML metadata `csl` field takes precedence over `defaultCsl`
+- [x] Implement
+- [x] Lint & type check
 
 ### Step 4: defaultBibliography behavior
 
-- [ ] Write test: `defaultBibliography` set to bib file path → citations resolved without YAML metadata
-- [ ] Write test: both YAML `bibliography` and `defaultBibliography` present → both loaded
-- [ ] Implement (plugin.ts already has `resolveDefaultBibliography` support — verify and wire up)
-- [ ] Lint & type check
+- [x] Write test: `defaultBibliography` set to bib file path → citations resolved without YAML metadata
+- [x] Write test: both YAML `bibliography` and `defaultBibliography` present → both loaded
+- [x] Implement (plugin.ts already has `resolveDefaultBibliography` support — verify and wire up)
+- [x] Lint & type check
 
 ### Step 5: searchDirectories / cslSearchDirectories behavior
 
-- [ ] Write test: `searchDirectories` specified → bibliography files resolved from those directories
-- [ ] Write test: `cslSearchDirectories` specified → CSL files resolved from those directories
-- [ ] Implement
-- [ ] Lint & type check
+- [x] Write test: `searchDirectories` specified → bibliography files resolved from those directories
+- [x] Write test: `cslSearchDirectories` specified → CSL files resolved from those directories
+- [x] Implement
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`

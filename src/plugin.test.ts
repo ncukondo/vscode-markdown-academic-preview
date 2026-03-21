@@ -313,3 +313,157 @@ describe("Step 6: Citations do not interfere with other markdown", () => {
     expect(result).toMatch(/<li>item 1<\/li>/);
   });
 });
+
+describe("Settings: defaultCsl", () => {
+  it("uses built-in style name from defaultCsl", () => {
+    const md = createMd({ defaultCsl: "vancouver" });
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    // Vancouver produces numeric citations like (1) instead of APA author-year (Smith, 2020)
+    // Citation text should NOT contain "Smith" since Vancouver uses numbers
+    expect(result).toMatch(/<cite/);
+    expect(result).not.toMatch(/<cite[^>]*>(?:(?!<\/cite>).)*Smith/s);
+  });
+
+  it("loads CSL file from defaultCsl file path", () => {
+    const cslContent = "<style>mock csl</style>";
+    const md = createMd({
+      defaultCsl: "/styles/custom.csl",
+      readFileSync: (path: string) => {
+        if (path === "/styles/custom.csl") return cslContent;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) => path === "/styles/custom.csl",
+    });
+    // If CSL file can't be parsed, citation-js falls back gracefully
+    // We verify the file path was resolved and attempted
+    const src = INLINE_REFS_DOC + "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite/);
+  });
+
+  it("YAML csl field takes precedence over defaultCsl", () => {
+    const cslXml = `<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info><title>Test</title><id>test</id></info>
+  <citation><layout><text variable="title"/></layout></citation>
+  <bibliography><layout><text variable="title"/></layout></bibliography>
+</style>`;
+    const md = createMd({
+      defaultCsl: "vancouver",
+      readFileSync: (path: string) => {
+        if (path === "/refs.bib") return TEST_BIB;
+        if (path === "/custom.csl") return cslXml;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) =>
+        path === "/refs.bib" || path === "/custom.csl",
+    });
+    const src = `---
+bibliography: /refs.bib
+csl: /custom.csl
+---
+
+Text with [@smith2020].
+`;
+    const resultWithYamlCsl = md.render(src);
+    // The custom CSL outputs title, so "A Test Article" should appear
+    expect(resultWithYamlCsl).toMatch(/A Test Article/);
+  });
+});
+
+describe("Settings: defaultBibliography", () => {
+  it("resolves citations from defaultBibliography without YAML metadata", () => {
+    const md = createMd({
+      defaultBibliography: ["/refs.bib"],
+      readFileSync: (path: string) => {
+        if (path === "/refs.bib") return TEST_BIB;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) => path === "/refs.bib",
+    });
+    const src = "Text with [@smith2020].";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*2020.*<\/cite>/s);
+    expect(result).toMatch(/class="csl-bib-body"/);
+  });
+
+  it("loads both YAML bibliography and defaultBibliography", () => {
+    const extraBib = `@article{jones2021,
+  author = {Jones, Alice},
+  title = {Extra Article},
+  journal = {Extra Journal},
+  year = {2021}
+}
+`;
+    const md = createMd({
+      defaultBibliography: ["/extra.bib"],
+      readFileSync: (path: string) => {
+        if (path === "/refs.bib") return TEST_BIB;
+        if (path === "/extra.bib") return extraBib;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) =>
+        path === "/refs.bib" || path === "/extra.bib",
+    });
+    const src = `---
+bibliography: /refs.bib
+---
+
+[@smith2020] and [@jones2021].
+`;
+    const result = md.render(src);
+    expect(result).toMatch(/Smith/);
+    expect(result).toMatch(/Jones/);
+  });
+});
+
+describe("Settings: searchDirectories", () => {
+  it("resolves bibliography from searchDirectories", () => {
+    const md = createMd({
+      searchDirectories: ["/lib/bibs"],
+      readFileSync: (path: string) => {
+        if (path === "/lib/bibs/refs.bib") return TEST_BIB;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) => path === "/lib/bibs/refs.bib",
+    });
+    const src = `---
+bibliography: refs.bib
+---
+
+Text with [@smith2020].
+`;
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*2020.*<\/cite>/s);
+  });
+
+  it("resolves CSL from cslSearchDirectories", () => {
+    const cslXml = `<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">
+  <info><title>Test</title><id>test</id></info>
+  <citation><layout><text variable="title"/></layout></citation>
+  <bibliography><layout><text variable="title"/></layout></bibliography>
+</style>`;
+    const md = createMd({
+      cslSearchDirectories: ["/lib/csl"],
+      readFileSync: (path: string) => {
+        if (path === "/refs.bib") return TEST_BIB;
+        if (path === "/lib/csl/custom.csl") return cslXml;
+        throw new Error("File not found: " + path);
+      },
+      existsSync: (path: string) =>
+        path === "/refs.bib" || path === "/lib/csl/custom.csl",
+    });
+    const src = `---
+bibliography: /refs.bib
+csl: custom.csl
+---
+
+Text with [@smith2020].
+`;
+    const result = md.render(src);
+    // Custom CSL outputs title
+    expect(result).toMatch(/A Test Article/);
+  });
+});

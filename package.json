@@ -37,7 +37,41 @@
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [
       "./media/citation-popover.css"
-    ]
+    ],
+    "configuration": {
+      "title": "Pandoc Citation Preview",
+      "properties": {
+        "pandocCitationPreview.defaultCsl": {
+          "type": "string",
+          "default": "",
+          "description": "Default CSL style name (e.g. \"ieee\") or file path. Used when no CSL is specified in YAML frontmatter."
+        },
+        "pandocCitationPreview.defaultBibliography": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Default bibliography file paths. These are loaded in addition to any files specified in YAML frontmatter."
+        },
+        "pandocCitationPreview.searchDirectories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Directories to search when resolving bibliography file paths."
+        },
+        "pandocCitationPreview.cslSearchDirectories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Directories to search when resolving CSL style file paths."
+        }
+      }
+    }
   },
   "main": "./dist/extension.js",
   "scripts": {

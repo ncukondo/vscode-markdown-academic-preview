@@ -11,7 +11,7 @@ import {
   type BibliographyData,
   loadBibliographySync,
 } from "./resolver/bibliography";
-import { resolvePath, resolveDefaultBibliography } from "./resolver/file-resolver";
+import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 
@@ -440,25 +440,36 @@ function loadCslStyle(
   cslPath: string | null,
   opts: PluginOptions,
 ): string | null {
-  if (!cslPath || !opts.readFileSync || !opts.existsSync) return null;
-
   const context = {
     mdFileDir: opts.mdFilePath
       ? dirName(opts.mdFilePath)
       : opts.workspaceRoot || "",
     searchDirectories: opts.cslSearchDirectories || [],
     workspaceRoot: opts.workspaceRoot || "",
-    exists: opts.existsSync,
+    exists: opts.existsSync || (() => false),
   };
 
-  const resolved = resolvePath(cslPath, context);
-  if (!resolved) return null;
-
-  try {
-    return opts.readFileSync(resolved);
-  } catch {
-    return null;
+  // YAML csl field takes precedence
+  if (cslPath && opts.readFileSync && opts.existsSync) {
+    const resolved = resolvePath(cslPath, context);
+    if (resolved) {
+      try {
+        return opts.readFileSync(resolved);
+      } catch {
+        // fall through to defaultCsl
+      }
+    }
   }
+
+  // Fall back to defaultCsl setting
+  if (!opts.defaultCsl) return null;
+
+  if (opts.readFileSync) {
+    return resolveDefaultCsl(opts.defaultCsl, context, opts.readFileSync);
+  }
+
+  // No readFileSync available — treat as built-in style name
+  return opts.defaultCsl;
 }
 
 // --- Utility ---

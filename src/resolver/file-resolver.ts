@@ -58,6 +58,22 @@ export function resolvePath(
   return null;
 }
 
+export function resolveDefaultCsl(
+  defaultCsl: string,
+  context: ResolveContext,
+  readFile: (path: string) => string,
+): string {
+  const resolved = resolvePath(defaultCsl, context);
+  if (resolved) {
+    try {
+      return readFile(resolved);
+    } catch {
+      // fall through to built-in name
+    }
+  }
+  return defaultCsl;
+}
+
 export function resolveDefaultBibliography(
   defaultPaths: string[],
   context: ResolveContext,

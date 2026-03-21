@@ -8,6 +8,7 @@ import { loadBibliographySync } from "./resolver/bibliography";
 import {
   resolvePath,
   resolveDefaultBibliography,
+  resolveDefaultCsl,
 } from "./resolver/file-resolver";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 
@@ -76,13 +77,13 @@ export function createCitationHoverProvider(
 
       if (!bibData.ids.includes(citationKey)) return null;
 
-      // Load CSL style
+      // Load CSL style (YAML csl field takes precedence over defaultCsl)
       let cslStyle: string | null = null;
+      const cslCtx = {
+        ...resolveCtx,
+        searchDirectories: options.cslSearchDirectories || [],
+      };
       if (metadata.csl) {
-        const cslCtx = {
-          ...resolveCtx,
-          searchDirectories: options.cslSearchDirectories || [],
-        };
         const resolved = resolvePath(metadata.csl, cslCtx);
         if (resolved) {
           try {
@@ -91,6 +92,13 @@ export function createCitationHoverProvider(
             // skip unreadable CSL files
           }
         }
+      }
+      if (!cslStyle && options.defaultCsl) {
+        cslStyle = resolveDefaultCsl(
+          options.defaultCsl,
+          cslCtx,
+          (p) => fs.readFileSync(p, "utf-8"),
+        );
       }
 
       // Format single bibliography entry (same as bibliography section)
