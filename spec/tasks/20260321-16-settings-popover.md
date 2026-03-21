@@ -31,14 +31,14 @@ Each step follows Red-Green-Refactor.
 
 ### Step 3: Wire up in extension.ts
 
-- [ ] Read `popoverEnabled` from `vscode.workspace.getConfiguration`
-- [ ] Pass to `PluginOptions`
-- [ ] Lint & type check
+- [x] Read `popoverEnabled` from `vscode.workspace.getConfiguration`
+- [x] Pass to `PluginOptions`
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
 - [ ] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`

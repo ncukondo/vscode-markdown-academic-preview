@@ -3,6 +3,7 @@ export interface ExtensionSettings {
   defaultBibliography?: string[];
   searchDirectories?: string[];
   cslSearchDirectories?: string[];
+  popoverEnabled?: boolean;
 }
 
 export interface ConfigGetter {
@@ -30,6 +31,11 @@ export function readExtensionSettings(config: ConfigGetter): ExtensionSettings {
   const cslSearchDirectories = config.get<string[]>("cslSearchDirectories");
   if (cslSearchDirectories && cslSearchDirectories.length > 0) {
     settings.cslSearchDirectories = cslSearchDirectories;
+  }
+
+  const popoverEnabled = config.get<boolean>("popoverEnabled");
+  if (popoverEnabled !== undefined) {
+    settings.popoverEnabled = popoverEnabled;
   }
 
   return settings;

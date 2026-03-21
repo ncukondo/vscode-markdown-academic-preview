@@ -55,6 +55,24 @@ describe("readExtensionSettings", () => {
     expect(settings.cslSearchDirectories).toEqual(["/lib/csl"]);
   });
 
+  it("reads popoverEnabled boolean", () => {
+    const config = createMockConfig({ popoverEnabled: false });
+    const settings = readExtensionSettings(config);
+    expect(settings.popoverEnabled).toBe(false);
+  });
+
+  it("reads popoverEnabled true", () => {
+    const config = createMockConfig({ popoverEnabled: true });
+    const settings = readExtensionSettings(config);
+    expect(settings.popoverEnabled).toBe(true);
+  });
+
+  it("omits popoverEnabled when undefined", () => {
+    const config = createMockConfig({});
+    const settings = readExtensionSettings(config);
+    expect(settings.popoverEnabled).toBeUndefined();
+  });
+
   it("ignores empty arrays", () => {
     const config = createMockConfig({
       defaultBibliography: [],
