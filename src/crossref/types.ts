@@ -1,12 +1,18 @@
 export type CrossrefType = "fig" | "tbl" | "eq" | "sec" | "lst";
 
-export const CROSSREF_PREFIXES: readonly string[] = [
+export const CROSSREF_PREFIXES: readonly `${CrossrefType}:`[] = [
   "fig:",
   "tbl:",
   "eq:",
   "sec:",
   "lst:",
 ];
+
+type StripColon<S extends string> = S extends `${infer T}:` ? T : never;
+
+function stripColon<S extends `${string}:`>(s: S): StripColon<S> {
+  return s.slice(0, -1) as StripColon<S>;
+}
 
 export function parseCrossrefKey(
   key: string,
@@ -15,7 +21,7 @@ export function parseCrossrefKey(
     if (key.startsWith(prefix)) {
       const label = key.slice(prefix.length);
       if (label.length === 0) return null;
-      return { type: prefix.slice(0, -1) as CrossrefType, label };
+      return { type: stripColon(prefix), label };
     }
   }
   return null;
