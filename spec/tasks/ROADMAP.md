@@ -23,6 +23,12 @@
 | 16 | [Document bibliography provider](completed/20260322-16-document-bibliography-provider.md) | Done | — |
 | 17 | [Citation completion provider](completed/20260322-17-citation-completion-provider.md) | Done | — |
 | 18 | [Citation insert command (QuickPick)](completed/20260322-18-citation-insert-command.md) | Done | — |
+| 19 | [Crossref type detector](20260322-19-crossref-type-detector.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 20 | [Crossref plugin rendering (no numbering)](20260322-20-crossref-plugin-rendering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 21 | [Crossref definition scanner](20260322-21-crossref-definition-scanner.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 22 | [Crossref numbering](20260322-22-crossref-numbering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 23 | [Crossref numbered rendering in plugin](20260322-23-crossref-numbered-rendering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 24 | [Crossref YAML configuration](20260322-24-crossref-yaml-config.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 
 ## Dependency Graph
 
@@ -57,3 +63,16 @@ Phase 7 (resolver) ─────────────↑
 ```
 
 Phases 17 and 18 depend on Phase 16 but are independent of each other (can be developed in parallel).
+
+```
+Phase 19 (crossref types) ──→ Phase 20 (plugin rendering, no numbering)
+                                        ↓
+Phase 21 (def scanner) ──→ Phase 22 (numbering) ──→ Phase 23 (numbered rendering)
+                                                            ↓
+                                                     Phase 24 (YAML config)
+```
+
+Phase 19 and 21 can be started independently (no dependency on each other).
+Phase 20 depends on Phase 19. Phase 22 depends on Phase 21.
+Phase 23 depends on both Phase 20 and Phase 22.
+Phase 24 depends on Phase 23.
