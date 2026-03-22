@@ -21,7 +21,14 @@ export type CrossrefDefinitionMap = Map<string, CrossrefDefinition>;
 
 const DEFINITION_PATTERN = /\{#([a-z]+):([a-zA-Z0-9_][\w-]*)\}/g;
 
+const FENCED_CODE_BLOCK = /^(`{3,}|~{3,}).*\n[\s\S]*?\n\1\s*$/gm;
+
 const VALID_PREFIXES = new Set<string>(["fig", "tbl", "eq", "sec", "lst"]);
+
+/** Remove fenced code block contents so definitions inside them are ignored */
+function stripCodeBlocks(source: string): string {
+  return source.replace(FENCED_CODE_BLOCK, "");
+}
 
 /**
  * Scan a Markdown document for crossref definition targets ({#type:label})
@@ -30,8 +37,9 @@ const VALID_PREFIXES = new Set<string>(["fig", "tbl", "eq", "sec", "lst"]);
 export function scanCrossrefDefinitions(source: string): CrossrefDefinitionMap {
   const result: CrossrefDefinitionMap = new Map();
   const orderCounters = new Map<CrossrefType, number>();
+  const stripped = stripCodeBlocks(source);
 
-  for (const match of source.matchAll(DEFINITION_PATTERN)) {
+  for (const match of stripped.matchAll(DEFINITION_PATTERN)) {
     const type = match[1];
     const label = match[2];
 

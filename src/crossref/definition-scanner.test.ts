@@ -95,4 +95,55 @@ describe("scanCrossrefDefinitions", () => {
       expect(result.get("fig:other")?.order).toBe(2);
     });
   });
+
+  describe("code block skipping", () => {
+    it("ignores definitions inside fenced code blocks", () => {
+      const source = [
+        "```",
+        "![Caption](img.png){#fig:inside}",
+        "```",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+    });
+
+    it("finds definitions outside code blocks", () => {
+      const source = [
+        "```",
+        "{#fig:inside}",
+        "```",
+        "",
+        "![Caption](img.png){#fig:outside}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+      expect(result.has("fig:outside")).toBe(true);
+    });
+
+    it("handles tilde-style fenced code blocks", () => {
+      const source = [
+        "~~~",
+        "{#fig:inside}",
+        "~~~",
+        "",
+        "{#fig:outside}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+      expect(result.has("fig:outside")).toBe(true);
+    });
+
+    it("handles code blocks with language specifier", () => {
+      const source = [
+        "```python",
+        "{#fig:inside}",
+        "```",
+        "",
+        "{#fig:outside}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+      expect(result.has("fig:outside")).toBe(true);
+    });
+  });
 });
