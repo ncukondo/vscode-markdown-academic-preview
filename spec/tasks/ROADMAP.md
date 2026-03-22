@@ -29,6 +29,7 @@
 | 22 | [Crossref numbering](completed/20260322-22-crossref-numbering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 23 | [Crossref numbered rendering in plugin](completed/20260322-23-crossref-numbered-rendering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 24 | [Crossref YAML configuration](completed/20260322-24-crossref-yaml-config.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 25 | [Crossref caption rendering](20260323-25-crossref-caption-rendering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 
 ## Dependency Graph
 
@@ -76,3 +77,4 @@ Phase 19 and 21 can be started independently (no dependency on each other).
 Phase 20 depends on Phase 19. Phase 22 depends on Phase 21.
 Phase 23 depends on both Phase 20 and Phase 22.
 Phase 24 depends on Phase 23.
+Phase 25 depends on Phase 23 (definition scanner + numbered rendering).
