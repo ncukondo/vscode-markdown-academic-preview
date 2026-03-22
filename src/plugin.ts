@@ -15,6 +15,8 @@ import type { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
+import { isCrossrefKey, parseCrossrefKey } from "./crossref/types";
+import { renderCrossref } from "./crossref/crossref-renderer";
 
 export interface PluginOptions {
   enabled?: boolean;
@@ -135,16 +137,20 @@ export function pandocCitationPlugin(
       });
     }
 
-    // Walk tokens to collect cited IDs
+    // Walk tokens to collect cited IDs (skip crossref keys)
     walkTokens(state.tokens, (token) => {
       if (token.type === "pandoc_citation") {
         const citations: SingleCitation[] = JSON.parse(token.content);
         for (const c of citations) {
-          citedIds.add(c.id);
+          if (!isCrossrefKey(c.id)) {
+            citedIds.add(c.id);
+          }
         }
       } else if (token.type === "pandoc_citation_inline") {
         const data = JSON.parse(token.content);
-        citedIds.add(data.id);
+        if (!isCrossrefKey(data.id)) {
+          citedIds.add(data.id);
+        }
       }
     });
 
@@ -216,20 +222,55 @@ function renderBracketCitation(
   getPopoverId: (() => string) | null,
   locale?: string,
 ): string {
+  // If all citations are crossref, render as crossref only
+  const allCrossref = citations.every((c) => isCrossrefKey(c.id));
+  if (allCrossref) {
+    const parts = citations.map((c) => {
+      const cr = parseCrossrefKey(c.id)!;
+      return renderCrossref(cr.type, cr.label);
+    });
+    return parts.join("; ");
+  }
+
+  // Separate crossref and bibliography citations
+  const bibCitations = citations.filter((c) => !isCrossrefKey(c.id));
+  const crossrefCitations = citations.filter((c) => isCrossrefKey(c.id));
+
   if (!bibData || bibData.ids.length === 0) {
-    return renderFallbackBracket(citations);
+    if (crossrefCitations.length > 0 && bibCitations.length === 0) {
+      // Only crossref (already handled above)
+      return "";
+    }
+    return renderFallbackBracket(bibCitations);
   }
 
   const knownIds = new Set(bibData.ids);
-  const allKnown = citations.every((c) => knownIds.has(c.id));
-  const knownCitations = citations.filter((c) => knownIds.has(c.id));
+  const allBibKnown = bibCitations.every((c) => knownIds.has(c.id));
+  const knownCitations = bibCitations.filter((c) => knownIds.has(c.id));
   const tooltipHtml = getPopoverId ? bibliographyTooltipHtml(knownCitations.map((c) => c.id), bibData, cslStyle, locale) : "";
   const popover = buildPopover(tooltipHtml, getPopoverId, knownCitations[0]?.id);
 
-  if (!allKnown) {
-    // Mix of known and unknown - render what we can, warn for unknowns
+  // Mixed crossref + bibliography
+  if (crossrefCitations.length > 0) {
     const parts: string[] = [];
     for (const c of citations) {
+      const cr = parseCrossrefKey(c.id);
+      if (cr) {
+        parts.push(renderCrossref(cr.type, cr.label));
+      } else if (knownIds.has(c.id)) {
+        parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
+      } else {
+        parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
+      }
+    }
+    const inner = parts.join("; ");
+    return `<cite class="pandoc-citation">${popover.wrapInvoker(inner)}</cite>${popover.element}`;
+  }
+
+  if (!allBibKnown) {
+    // Mix of known and unknown - render what we can, warn for unknowns
+    const parts: string[] = [];
+    for (const c of bibCitations) {
       if (knownIds.has(c.id)) {
         parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
       } else {
@@ -241,7 +282,7 @@ function renderBracketCitation(
   }
 
   // All known - render using citation-js
-  const text = renderCitationGroup(citations, bibData, cslStyle, locale);
+  const text = renderCitationGroup(bibCitations, bibData, cslStyle, locale);
   return `<cite class="pandoc-citation">${popover.wrapInvoker(escapeHtml(text))}</cite>${popover.element}`;
 }
 
@@ -258,6 +299,11 @@ function renderInlineCitation(
   getPopoverId: (() => string) | null,
   locale?: string,
 ): string {
+  const crossref = parseCrossrefKey(id);
+  if (crossref) {
+    return renderCrossref(crossref.type, crossref.label);
+  }
+
   if (!bibData || !bibData.ids.includes(id)) {
     return `<cite class="pandoc-citation pandoc-citation-inline pandoc-citation-warning">@${escapeHtml(id)}</cite>`;
   }
