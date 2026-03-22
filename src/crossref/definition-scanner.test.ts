@@ -145,5 +145,63 @@ describe("scanCrossrefDefinitions", () => {
       expect(result.has("fig:inside")).toBe(false);
       expect(result.has("fig:outside")).toBe(true);
     });
+
+    it("handles closing fence with more chars than opening", () => {
+      const source = [
+        "```",
+        "{#fig:inside}",
+        "`````",
+        "",
+        "{#fig:outside}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+      expect(result.has("fig:outside")).toBe(true);
+    });
+
+    it("handles closing fence with up to 3 spaces indentation", () => {
+      const source = [
+        "```",
+        "{#fig:inside}",
+        "   ```",
+        "",
+        "{#fig:outside}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+      expect(result.has("fig:outside")).toBe(true);
+    });
+
+    it("does not close with fewer fence chars than opening", () => {
+      const source = [
+        "````",
+        "{#fig:inside}",
+        "```",
+        "{#fig:also_inside}",
+        "````",
+        "",
+        "{#fig:outside}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+      expect(result.has("fig:also_inside")).toBe(false);
+      expect(result.has("fig:outside")).toBe(true);
+    });
+
+    it("does not close with mismatched fence character", () => {
+      const source = [
+        "```",
+        "{#fig:inside}",
+        "~~~",
+        "{#fig:also_inside}",
+        "```",
+        "",
+        "{#fig:outside}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.has("fig:inside")).toBe(false);
+      expect(result.has("fig:also_inside")).toBe(false);
+      expect(result.has("fig:outside")).toBe(true);
+    });
   });
 });

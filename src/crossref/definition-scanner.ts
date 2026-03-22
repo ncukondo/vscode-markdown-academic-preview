@@ -7,7 +7,7 @@ export const CROSSREF_PREFIXES: readonly string[] = [
   "eq:",
   "sec:",
   "lst:",
-] as const;
+];
 
 /** A single crossref definition found in the document */
 export interface CrossrefDefinition {
@@ -21,13 +21,36 @@ export type CrossrefDefinitionMap = Map<string, CrossrefDefinition>;
 
 const DEFINITION_PATTERN = /\{#([a-z]+):([a-zA-Z0-9_][\w-]*)\}/g;
 
-const FENCED_CODE_BLOCK = /^(`{3,}|~{3,}).*\n[\s\S]*?\n\1\s*$/gm;
+const OPENING_FENCE = /^ {0,3}(`{3,}|~{3,})/;
 
 const VALID_PREFIXES = new Set<string>(["fig", "tbl", "eq", "sec", "lst"]);
 
 /** Remove fenced code block contents so definitions inside them are ignored */
 function stripCodeBlocks(source: string): string {
-  return source.replace(FENCED_CODE_BLOCK, "");
+  const lines = source.split("\n");
+  const result: string[] = [];
+  let fenceChar = "";
+  let fenceLen = 0;
+
+  for (const line of lines) {
+    if (fenceChar) {
+      const closing = line.match(new RegExp(`^ {0,3}(\\${fenceChar}{${fenceLen},})\\s*$`));
+      if (closing) {
+        fenceChar = "";
+        fenceLen = 0;
+      }
+      continue;
+    }
+    const open = line.match(OPENING_FENCE);
+    if (open) {
+      fenceChar = open[1][0];
+      fenceLen = open[1].length;
+      continue;
+    }
+    result.push(line);
+  }
+
+  return result.join("\n");
 }
 
 /**
