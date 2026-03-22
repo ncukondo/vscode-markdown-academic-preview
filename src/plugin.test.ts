@@ -864,3 +864,36 @@ describe("Crossref: caption rendering — Step 2: styled element", () => {
     expect(result).toMatch(/id="tbl:data"/);
   });
 });
+
+describe("Crossref: caption rendering — Step 3: block association", () => {
+  it("`: Caption {#tbl:data}` followed by a table renders caption above the table", () => {
+    const md = createMd();
+    const src = ": Caption {#tbl:data}\n\n| A | B |\n|---|---|\n| 1 | 2 |";
+    const result = md.render(src);
+    // Caption element should appear before the table
+    const captionIdx = result.indexOf('pandoc-crossref-caption');
+    const tableIdx = result.indexOf('<table>');
+    expect(captionIdx).toBeGreaterThan(-1);
+    expect(tableIdx).toBeGreaterThan(-1);
+    expect(captionIdx).toBeLessThan(tableIdx);
+  });
+
+  it("image followed by `: Caption {#fig:a}` renders caption below the image", () => {
+    const md = createMd();
+    const src = "![alt](img.png)\n\n: Caption {#fig:a}";
+    const result = md.render(src);
+    // Image should appear before the caption
+    const imgIdx = result.indexOf('<img');
+    const captionIdx = result.indexOf('pandoc-crossref-caption');
+    expect(imgIdx).toBeGreaterThan(-1);
+    expect(captionIdx).toBeGreaterThan(-1);
+    expect(imgIdx).toBeLessThan(captionIdx);
+  });
+
+  it("standalone caption (no adjacent block) still renders as caption element", () => {
+    const md = createMd();
+    const result = md.render(": Standalone Caption {#fig:lonely}");
+    expect(result).toContain('pandoc-crossref-caption');
+    expect(result).toContain("Standalone Caption");
+  });
+});
