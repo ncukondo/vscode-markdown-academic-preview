@@ -3,14 +3,8 @@ import * as fs from "fs";
 import { Cite } from "@citation-js/core";
 import "@citation-js/plugin-csl";
 import { parseCitationKey } from "./parser/citation-key";
-import { extractCitationMetadata } from "./metadata/yaml-extractor";
-import { loadBibliographySync } from "./resolver/bibliography";
 import type { BibliographyCache } from "./resolver/bibliography-cache";
-import {
-  resolvePath,
-  resolveDefaultBibliography,
-  resolveDefaultCsl,
-} from "./resolver/file-resolver";
+import { resolveDocumentBibliography } from "./resolver/document-bibliography";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -48,69 +42,20 @@ export function createCitationHoverProvider(
       const citationKey = findCitationKeyAtPosition(document, position);
       if (!citationKey) return null;
 
-      const text = document.getText();
-      const metadata = extractCitationMetadata(text);
-
-      const mdFilePath = document.uri.fsPath;
-      const mdFileDir = dirName(mdFilePath);
-
-      const resolveCtx = {
-        mdFileDir,
-        searchDirectories: options.searchDirectories || [],
-        workspaceRoot: options.workspaceRoot || "",
+      const { bibData, cslStyle } = resolveDocumentBibliography({
+        documentText: document.getText(),
+        documentPath: document.uri.fsPath,
+        readFile: (p: string) => fs.readFileSync(p, "utf-8"),
         exists: (p: string) => fs.existsSync(p),
-      };
-
-      const bibPaths: string[] = [];
-      for (const p of metadata.bibliography) {
-        const r = resolvePath(p, resolveCtx);
-        if (r) bibPaths.push(r);
-      }
-      if (options.defaultBibliography) {
-        for (const d of resolveDefaultBibliography(
-          options.defaultBibliography,
-          resolveCtx,
-        )) {
-          if (!bibPaths.includes(d)) bibPaths.push(d);
-        }
-      }
-
-      const bibData = options.bibliographyCache
-        ? options.bibliographyCache.load({
-            bibliographyPaths: bibPaths,
-            inlineReferences: metadata.references,
-          })
-        : loadBibliographySync({
-            bibliographyPaths: bibPaths,
-            inlineReferences: metadata.references,
-            readFile: (p: string) => fs.readFileSync(p, "utf-8"),
-          });
+        workspaceRoot: options.workspaceRoot,
+        searchDirectories: options.searchDirectories,
+        cslSearchDirectories: options.cslSearchDirectories,
+        defaultBibliography: options.defaultBibliography,
+        defaultCsl: options.defaultCsl,
+        bibliographyCache: options.bibliographyCache,
+      });
 
       if (!bibData.ids.includes(citationKey)) return null;
-
-      // Load CSL style (YAML csl field takes precedence over defaultCsl)
-      let cslStyle: string | null = null;
-      const cslCtx = {
-        ...resolveCtx,
-        searchDirectories: options.cslSearchDirectories || [],
-      };
-      if (metadata.csl) {
-        const resolved = resolvePath(metadata.csl, cslCtx);
-        if (resolved) {
-          try {
-            cslStyle = fs.readFileSync(resolved, "utf-8");
-          } catch {
-            // skip unreadable CSL files
-          }
-        }
-      }
-      if (!cslStyle && options.defaultCsl) {
-        cslStyle = resolveDefaultCsl(
-          options.defaultCsl,
-          cslCtx,
-          (p) => fs.readFileSync(p, "utf-8"),
-        );
-      }
 
       // Format single bibliography entry (same as bibliography section)
       const entry = bibData.cite.data.find(
@@ -159,9 +104,4 @@ function findCitationKeyAtPosition(
     }
   }
   return null;
-}
-
-function dirName(filePath: string): string {
-  const idx = filePath.lastIndexOf("/");
-  return idx === -1 ? "" : filePath.slice(0, idx);
 }
