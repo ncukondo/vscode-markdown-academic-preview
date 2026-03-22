@@ -4,7 +4,10 @@ import { pandocCitationPlugin } from "./plugin";
 import type { PluginOptions } from "./plugin";
 import { createCitationHoverProvider } from "./hover";
 import { BibliographyCache } from "./resolver/bibliography-cache";
+import { resolveDocumentBibliography } from "./resolver/document-bibliography";
 import { readExtensionSettings } from "./settings";
+import { toQuickPickItems, buildInsertText } from "./citation-picker";
+import type { CitationQuickPickItem } from "./citation-picker";
 import * as fs from "fs";
 
 export function activate(context: vscode.ExtensionContext) {
@@ -27,6 +30,53 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerHoverProvider("markdown", hoverProvider),
   );
+
+  // Register insert citation command
+  const insertCitationCommand = vscode.commands.registerCommand(
+    "pandocCitationPreview.insertCitation",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || editor.document.languageId !== "markdown") return;
+
+      const { bibData } = resolveDocumentBibliography({
+        documentText: editor.document.getText(),
+        documentPath: editor.document.uri.fsPath,
+        readFile: (p: string) => fs.readFileSync(p, "utf-8"),
+        exists: (p: string) => fs.existsSync(p),
+        workspaceRoot,
+        searchDirectories: settings.searchDirectories,
+        cslSearchDirectories: settings.cslSearchDirectories,
+        defaultBibliography: settings.defaultBibliography,
+        defaultCsl: settings.defaultCsl,
+        bibliographyCache: bibCache,
+      });
+
+      if (bibData.ids.length === 0) {
+        vscode.window.showInformationMessage(
+          "No bibliography entries found in the current document.",
+        );
+        return;
+      }
+
+      const items = toQuickPickItems(bibData.cite.data);
+      const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: "Search and select citations to insert",
+        canPickMany: true,
+        matchOnDescription: true,
+        matchOnDetail: true,
+      });
+
+      if (!selected || selected.length === 0) return;
+
+      const text = buildInsertText(
+        (selected as CitationQuickPickItem[]).map((s) => s.citationKey),
+      );
+      await editor.edit((editBuilder) => {
+        editBuilder.insert(editor.selection.active, text);
+      });
+    },
+  );
+  context.subscriptions.push(insertCitationCommand);
 
   return {
     extendMarkdownIt(md: MarkdownIt) {
