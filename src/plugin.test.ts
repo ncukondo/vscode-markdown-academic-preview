@@ -571,7 +571,7 @@ describe("Crossref: render crossref tokens", () => {
   it("undefined crossref renders with warning class in HTML", () => {
     const md = createMd();
     const result = md.render("See @fig:diagram for details.");
-    expect(result).toContain('<span class="pandoc-crossref pandoc-crossref-warning">Figure: diagram</span>');
+    expect(result).toContain('<a href="#fig:diagram" class="pandoc-crossref pandoc-crossref-warning">Figure: diagram</a>');
   });
 
   it("crossref-only bracket does not produce bibliography", () => {
@@ -725,6 +725,49 @@ See @fig:undefined.
     const result = md.render(src);
     expect(result).toContain("Fig.: undefined");
     expect(result).toContain("pandoc-crossref-warning");
+  });
+});
+
+describe("Crossref: definition markers stripped from output", () => {
+  it("{#fig:label} is removed from rendered output", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee @fig:a.";
+    const result = md.render(src);
+    expect(result).not.toContain("{#fig:a}");
+  });
+
+  it("{#sec:label} in heading is removed", () => {
+    const md = createMd();
+    const result = md.render("# Introduction {#sec:intro}");
+    expect(result).not.toContain("{#sec:intro}");
+  });
+
+  it("anchor element is inserted for definition", () => {
+    const md = createMd();
+    const result = md.render("# Introduction {#sec:intro}");
+    expect(result).toContain('<a id="sec:intro"></a>');
+  });
+
+  it("non-crossref attributes are not stripped", () => {
+    const md = createMd();
+    const result = md.render("Some text {#not-crossref}.");
+    expect(result).toContain("{#not-crossref}");
+  });
+});
+
+describe("Crossref: references are clickable links", () => {
+  it("inline crossref renders as <a> with href", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee @fig:a.";
+    const result = md.render(src);
+    expect(result).toMatch(/<a href="#fig:a"[^>]*>Figure\u00a01<\/a>/);
+  });
+
+  it("bracket crossref renders as <a> with href", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee [@fig:a].";
+    const result = md.render(src);
+    expect(result).toMatch(/<a href="#fig:a"[^>]*>Figure\u00a01<\/a>/);
   });
 });
 

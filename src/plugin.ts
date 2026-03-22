@@ -144,6 +144,9 @@ export function pandocCitationPlugin(
       });
     }
 
+    // Strip {#type:label} definition markers from inline content and insert anchors
+    stripCrossrefDefinitions(state);
+
     // Walk tokens to collect cited IDs (skip crossref keys)
     walkTokens(state.tokens, (token) => {
       if (token.type === "pandoc_citation") {
@@ -649,4 +652,64 @@ function addBibEntryIds(html: string): string {
     /data-csl-entry-id="([^"]+)"/g,
     'id="ref-$1" data-csl-entry-id="$1"',
   );
+}
+
+const CROSSREF_ATTR_RE = /\{#(fig|tbl|eq|sec|lst):([a-zA-Z0-9_][\w-]*)\}/g;
+
+/**
+ * Strip {#type:label} definition markers from inline tokens
+ * and insert invisible anchor elements for link targets.
+ */
+function stripCrossrefDefinitions(state: StateCore): void {
+  for (const blockToken of state.tokens) {
+    if (blockToken.type !== "inline" || !blockToken.children) continue;
+
+    const newChildren: Token[] = [];
+    let changed = false;
+
+    for (const child of blockToken.children) {
+      if (child.type !== "text") {
+        newChildren.push(child);
+        continue;
+      }
+
+      CROSSREF_ATTR_RE.lastIndex = 0;
+      let lastIndex = 0;
+      let match: RegExpExecArray | null;
+
+      while ((match = CROSSREF_ATTR_RE.exec(child.content)) !== null) {
+        changed = true;
+        const before = child.content.slice(lastIndex, match.index);
+
+        if (before) {
+          const textToken = new state.Token("text", "", 0);
+          textToken.content = before;
+          newChildren.push(textToken);
+        }
+
+        // Insert an anchor for the definition
+        const anchorToken = new state.Token("html_inline", "", 0);
+        anchorToken.content = `<a id="${match[1]}:${match[2]}"></a>`;
+        newChildren.push(anchorToken);
+
+        lastIndex = match.index + match[0].length;
+      }
+
+      if (!changed) {
+        newChildren.push(child);
+      } else if (lastIndex < child.content.length) {
+        const textToken = new state.Token("text", "", 0);
+        textToken.content = child.content.slice(lastIndex);
+        newChildren.push(textToken);
+      }
+    }
+
+    if (changed) {
+      blockToken.children = newChildren;
+      // Update combined content
+      blockToken.content = newChildren
+        .map((t) => (t.type === "html_inline" ? "" : t.content))
+        .join("");
+    }
+  }
 }

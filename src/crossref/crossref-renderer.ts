@@ -15,5 +15,5 @@ export function renderCrossref(
   const text =
     number != null ? `${displayName}\u00a0${number}` : `${displayName}: ${escaped}`;
   const cls = extraClass ? `pandoc-crossref ${extraClass}` : "pandoc-crossref";
-  return `<span class="${cls}">${text}</span>`;
+  return `<a href="#${escapeHtml(type)}:${escaped}" class="${cls}">${text}</a>`;
 }
