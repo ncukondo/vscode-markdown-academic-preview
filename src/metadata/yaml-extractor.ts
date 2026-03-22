@@ -1,4 +1,5 @@
 import { parse as parseYaml } from "yaml";
+import { type CrossrefConfig, DEFAULT_CROSSREF_CONFIG } from "../crossref/types";
 
 /**
  * Represents a CSL-JSON reference entry found in inline `references` metadata.
@@ -215,6 +216,38 @@ export function extractNonFrontmatterYamlRanges(document: string): Array<[number
   return extractYamlBlocksWithPositions(document)
     .filter((b) => b.startLine > 0)
     .map((b) => [b.startLine, b.endLine]);
+}
+
+const CROSSREF_PREFIX_KEYS: (keyof CrossrefConfig)[] = [
+  "figPrefix", "tblPrefix", "eqnPrefix", "secPrefix", "lstPrefix",
+];
+
+/**
+ * Extract crossref prefix configuration from YAML blocks in a Pandoc markdown document.
+ * Supports `figPrefix`, `tblPrefix`, `eqnPrefix`, `secPrefix`, `lstPrefix`.
+ * Missing fields use defaults from CROSSREF_DISPLAY_NAMES.
+ */
+export function extractCrossrefConfig(document: string): CrossrefConfig {
+  const result: CrossrefConfig = { ...DEFAULT_CROSSREF_CONFIG };
+  const yamlBlocks = extractYamlBlocks(document);
+
+  for (const block of yamlBlocks) {
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = parseYaml(block) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    if (typeof parsed !== "object" || parsed === null) continue;
+
+    for (const key of CROSSREF_PREFIX_KEYS) {
+      if (key in parsed && typeof parsed[key] === "string") {
+        result[key] = parsed[key];
+      }
+    }
+  }
+
+  return result;
 }
 
 export function extractCitationMetadata(document: string): CitationMetadata {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractCitationMetadata, extractNonFrontmatterYamlRanges } from "./yaml-extractor";
+import { extractCitationMetadata, extractNonFrontmatterYamlRanges, extractCrossrefConfig } from "./yaml-extractor";
 
 describe("extractCitationMetadata", () => {
   // ─── Step 1: Single frontmatter block ──────────────────────────────
@@ -251,5 +251,73 @@ describe("extractCitationMetadata", () => {
       const keys = Object.keys(result);
       expect(keys).toEqual(["bibliography", "csl", "references", "nocite"]);
     });
+  });
+});
+
+describe("extractCrossrefConfig", () => {
+  it("extracts figPrefix", () => {
+    const doc = '---\nfigPrefix: "Fig."\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.figPrefix).toBe("Fig.");
+  });
+
+  it("extracts tblPrefix", () => {
+    const doc = '---\ntblPrefix: "Table"\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.tblPrefix).toBe("Table");
+  });
+
+  it("extracts eqnPrefix (note: eqn not eq per pandoc-crossref convention)", () => {
+    const doc = '---\neqnPrefix: "Eq."\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.eqnPrefix).toBe("Eq.");
+  });
+
+  it("extracts secPrefix", () => {
+    const doc = '---\nsecPrefix: "Section"\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.secPrefix).toBe("Section");
+  });
+
+  it("extracts lstPrefix", () => {
+    const doc = '---\nlstPrefix: "Listing"\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.lstPrefix).toBe("Listing");
+  });
+
+  it("uses defaults for missing fields", () => {
+    const doc = '---\ntitle: Hello\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.figPrefix).toBe("Figure");
+    expect(result.tblPrefix).toBe("Table");
+    expect(result.eqnPrefix).toBe("Equation");
+    expect(result.secPrefix).toBe("Section");
+    expect(result.lstPrefix).toBe("Listing");
+  });
+
+  it("uses defaults when no YAML block exists", () => {
+    const doc = "Just some text.";
+    const result = extractCrossrefConfig(doc);
+    expect(result.figPrefix).toBe("Figure");
+    expect(result.tblPrefix).toBe("Table");
+    expect(result.eqnPrefix).toBe("Equation");
+    expect(result.secPrefix).toBe("Section");
+    expect(result.lstPrefix).toBe("Listing");
+  });
+
+  it("merges partial overrides with defaults", () => {
+    const doc = '---\nfigPrefix: "Fig."\neqnPrefix: "Eq."\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.figPrefix).toBe("Fig.");
+    expect(result.tblPrefix).toBe("Table");
+    expect(result.eqnPrefix).toBe("Eq.");
+    expect(result.secPrefix).toBe("Section");
+    expect(result.lstPrefix).toBe("Listing");
+  });
+
+  it("later YAML block overrides earlier", () => {
+    const doc = '---\nfigPrefix: "Fig."\n---\ntext\n\n---\nfigPrefix: "Figure"\n---';
+    const result = extractCrossrefConfig(doc);
+    expect(result.figPrefix).toBe("Figure");
   });
 });

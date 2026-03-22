@@ -38,3 +38,29 @@ export function parseCrossrefKey(
 export function isCrossrefKey(key: string): boolean {
   return parseCrossrefKey(key) !== null;
 }
+
+/** YAML-configurable prefix strings for each crossref type. */
+export interface CrossrefConfig {
+  figPrefix: string;
+  tblPrefix: string;
+  eqnPrefix: string;
+  secPrefix: string;
+  lstPrefix: string;
+}
+
+export const DEFAULT_CROSSREF_CONFIG: Readonly<CrossrefConfig> = {
+  figPrefix: "Figure",
+  tblPrefix: "Table",
+  eqnPrefix: "Equation",
+  secPrefix: "Section",
+  lstPrefix: "Listing",
+};
+
+/** Maps CrossrefType to the corresponding CrossrefConfig key. */
+export const CROSSREF_TYPE_TO_PREFIX_KEY: Record<CrossrefType, keyof CrossrefConfig> = {
+  fig: "figPrefix",
+  tbl: "tblPrefix",
+  eq: "eqnPrefix",
+  sec: "secPrefix",
+  lst: "lstPrefix",
+};
