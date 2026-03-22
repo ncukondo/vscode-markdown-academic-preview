@@ -53,6 +53,15 @@ interface YamlBlock {
   endLine: number;
 }
 
+function isYamlMapping(content: string): boolean {
+  try {
+    const parsed = parseYaml(content);
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed);
+  } catch {
+    return false;
+  }
+}
+
 function extractYamlBlocksWithPositions(document: string): YamlBlock[] {
   const lines = document.split("\n");
   const blocks: YamlBlock[] = [];
@@ -105,11 +114,14 @@ function extractYamlBlocksWithPositions(document: string): YamlBlock[] {
           i++;
         }
         if (closed && yamlLines.length > 0) {
-          blocks.push({
-            content: yamlLines.join("\n"),
-            startLine,
-            endLine: i,
-          });
+          const content = yamlLines.join("\n");
+          if (isYamlMapping(content)) {
+            blocks.push({
+              content,
+              startLine,
+              endLine: i,
+            });
+          }
         }
         continue;
       }

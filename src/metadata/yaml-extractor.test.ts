@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractCitationMetadata } from "./yaml-extractor";
+import { extractCitationMetadata, extractNonFrontmatterYamlRanges } from "./yaml-extractor";
 
 describe("extractCitationMetadata", () => {
   // ─── Step 1: Single frontmatter block ──────────────────────────────
@@ -188,6 +188,51 @@ describe("extractCitationMetadata", () => {
       const doc = "---\nnocite: |\n  @*\n---";
       const result = extractCitationMetadata(doc);
       expect(result.nocite).toEqual(["*"]);
+    });
+  });
+
+  // ─── Content between horizontal rules should not be treated as YAML ──
+  describe("Horizontal rules should not be treated as YAML blocks", () => {
+    it("does not treat text between --- horizontal rules as YAML", () => {
+      const doc = [
+        "Some text",
+        "",
+        "---",
+        "This is just regular text between horizontal rules.",
+        "---",
+        "",
+        "More text",
+      ].join("\n");
+      const ranges = extractNonFrontmatterYamlRanges(doc);
+      expect(ranges).toEqual([]);
+    });
+
+    it("does not treat blank lines between --- as YAML", () => {
+      const doc = [
+        "Some text",
+        "",
+        "---",
+        "",
+        "---",
+        "",
+        "More text",
+      ].join("\n");
+      const ranges = extractNonFrontmatterYamlRanges(doc);
+      expect(ranges).toEqual([]);
+    });
+
+    it("still detects valid YAML blocks between ---", () => {
+      const doc = [
+        "Some text",
+        "",
+        "---",
+        "bibliography: refs.bib",
+        "---",
+        "",
+        "More text",
+      ].join("\n");
+      const ranges = extractNonFrontmatterYamlRanges(doc);
+      expect(ranges).toEqual([[2, 5]]);
     });
   });
 
