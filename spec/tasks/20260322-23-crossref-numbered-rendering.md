@@ -59,8 +59,8 @@ Add a warning style for crossref references that have no matching definition.
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
