@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { pandocCitationPlugin } from "./plugin";
 import type { PluginOptions } from "./plugin";
 import { createCitationHoverProvider } from "./hover";
+import { createCitationCompletionProvider } from "./completion-provider";
 import { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolveDocumentBibliography } from "./resolver/document-bibliography";
 import { readExtensionSettings } from "./settings";
@@ -74,6 +75,22 @@ export function activate(context: vscode.ExtensionContext) {
     },
   );
   context.subscriptions.push(insertCitationCommand);
+
+  // Register completion provider for citation keys
+  if (settings.completionEnabled !== false) {
+    const completionProvider = createCitationCompletionProvider({
+      workspaceRoot,
+      ...settings,
+      bibliographyCache: bibCache,
+    });
+    context.subscriptions.push(
+      vscode.languages.registerCompletionItemProvider(
+        "markdown",
+        completionProvider,
+        "@",
+      ),
+    );
+  }
 
   return {
     extendMarkdownIt(md: MarkdownIt) {
