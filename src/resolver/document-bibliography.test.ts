@@ -142,4 +142,84 @@ Text.
     );
     expect(entry.title).toBe("Overridden Title");
   });
+
+  it("loads defaultBibliography files in addition to YAML bibliography", () => {
+    const documentText = `---
+bibliography: refs.bib
+---
+
+Text.
+`;
+    const bibtexDefault = `@article{default2023,
+  author = {Default, Author},
+  title = {Default Paper},
+  journal = {Default Journal},
+  year = {2023}
+}`;
+    const files: Record<string, string> = {
+      "/doc/refs.bib": BIBTEX_CONTENT,
+      "/workspace/default.bib": bibtexDefault,
+    };
+    const existingFiles = new Set(Object.keys(files));
+
+    const result = resolveDocumentBibliography({
+      documentText,
+      documentPath: "/doc/paper.md",
+      readFile: (p: string) => files[p] ?? "",
+      exists: (p: string) => existingFiles.has(p),
+      workspaceRoot: "/workspace",
+      defaultBibliography: ["default.bib"],
+    });
+
+    expect(result.bibData.ids).toContain("smith2020");
+    expect(result.bibData.ids).toContain("default2023");
+  });
+
+  it("does not duplicate entries when defaultBibliography overlaps with YAML bibliography", () => {
+    const documentText = `---
+bibliography: refs.bib
+---
+
+Text.
+`;
+    const files: Record<string, string> = {
+      "/doc/refs.bib": BIBTEX_CONTENT,
+    };
+    const existingFiles = new Set(Object.keys(files));
+
+    const result = resolveDocumentBibliography({
+      documentText,
+      documentPath: "/doc/paper.md",
+      readFile: (p: string) => files[p] ?? "",
+      exists: (p: string) => existingFiles.has(p),
+      defaultBibliography: ["/doc/refs.bib"],
+    });
+
+    // Should not duplicate smith2020
+    const smithCount = result.bibData.ids.filter((id: string) => id === "smith2020").length;
+    expect(smithCount).toBe(1);
+  });
+
+  it("resolves bibliography paths using searchDirectories", () => {
+    const documentText = `---
+bibliography: refs.bib
+---
+
+Text.
+`;
+    const files: Record<string, string> = {
+      "/shared/bibs/refs.bib": BIBTEX_CONTENT,
+    };
+    const existingFiles = new Set(Object.keys(files));
+
+    const result = resolveDocumentBibliography({
+      documentText,
+      documentPath: "/doc/paper.md",
+      readFile: (p: string) => files[p] ?? "",
+      exists: (p: string) => existingFiles.has(p),
+      searchDirectories: ["/shared/bibs"],
+    });
+
+    expect(result.bibData.ids).toContain("smith2020");
+  });
 });
