@@ -24,37 +24,37 @@ Each step follows Red-Green-Refactor:
 
 Extend YAML metadata extraction to recognize crossref prefix fields.
 
-- [ ] Write test: `figPrefix: "Fig."` → extracted as `{ figPrefix: "Fig." }`
-- [ ] Write test: `tblPrefix: "Table"` → extracted
-- [ ] Write test: `eqnPrefix: "Eq."` → extracted (note: `eqn` not `eq` per pandoc-crossref convention)
-- [ ] Write test: `secPrefix: "Section"` → extracted
-- [ ] Write test: `lstPrefix: "Listing"` → extracted
-- [ ] Write test: missing fields → use defaults
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `figPrefix: "Fig."` → extracted as `{ figPrefix: "Fig." }`
+- [x] Write test: `tblPrefix: "Table"` → extracted
+- [x] Write test: `eqnPrefix: "Eq."` → extracted (note: `eqn` not `eq` per pandoc-crossref convention)
+- [x] Write test: `secPrefix: "Section"` → extracted
+- [x] Write test: `lstPrefix: "Listing"` → extracted
+- [x] Write test: missing fields → use defaults
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: Apply custom prefixes in rendering
 
 Pass extracted prefix configuration to the crossref renderer.
 
-- [ ] Write test: `figPrefix: "Fig."` + `@fig:a` → renders "Fig. 1" instead of "Figure 1"
-- [ ] Write test: unset prefix → uses default ("Figure", "Table", etc.)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `figPrefix: "Fig."` + `@fig:a` → renders "Fig. 1" instead of "Figure 1"
+- [x] Write test: unset prefix → uses default ("Figure", "Table", etc.)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: Plugin integration
 
 Wire YAML extraction and prefix config through the plugin core rule to renderers.
 
-- [ ] Write test: full round-trip with custom prefix in frontmatter
-- [ ] Write test: full round-trip with default prefixes (no YAML config)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: full round-trip with custom prefix in frontmatter
+- [x] Write test: full round-trip with default prefixes (no YAML config)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`

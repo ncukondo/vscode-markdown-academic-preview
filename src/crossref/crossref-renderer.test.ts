@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { renderCrossref } from "./crossref-renderer";
+import type { CrossrefConfig } from "./types";
 
 describe("renderCrossref", () => {
   it("renders without number as type: label", () => {
@@ -50,5 +51,39 @@ describe("renderCrossref", () => {
     expect(renderCrossref("fig", '<img onerror="xss">')).toBe(
       '<span class="pandoc-crossref">Figure: &lt;img onerror=&quot;xss&quot;&gt;</span>',
     );
+  });
+
+  describe("with custom CrossrefConfig", () => {
+    const config: CrossrefConfig = {
+      figPrefix: "Fig.",
+      tblPrefix: "Tbl.",
+      eqnPrefix: "Eq.",
+      secPrefix: "Sec.",
+      lstPrefix: "Lst.",
+    };
+
+    it("figPrefix: 'Fig.' + @fig:a renders 'Fig. 1'", () => {
+      expect(renderCrossref("fig", "a", 1, undefined, config)).toBe(
+        '<span class="pandoc-crossref">Fig.\u00a01</span>',
+      );
+    });
+
+    it("eqnPrefix maps to eq type", () => {
+      expect(renderCrossref("eq", "euler", 3, undefined, config)).toBe(
+        '<span class="pandoc-crossref">Eq.\u00a03</span>',
+      );
+    });
+
+    it("unset config uses default display names", () => {
+      expect(renderCrossref("fig", "a", 1)).toBe(
+        '<span class="pandoc-crossref">Figure\u00a01</span>',
+      );
+    });
+
+    it("custom prefix without number shows prefix: label", () => {
+      expect(renderCrossref("tbl", "results", undefined, undefined, config)).toBe(
+        '<span class="pandoc-crossref">Tbl.: results</span>',
+      );
+    });
   });
 });

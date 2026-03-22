@@ -4,7 +4,7 @@ import type StateCore from "markdown-it/lib/rules_core/state_core.mjs";
 import type StateInline from "markdown-it/lib/rules_inline/state_inline.mjs";
 import { Cite } from "@citation-js/core";
 import "@citation-js/plugin-csl";
-import { extractCitationMetadata, extractNonFrontmatterYamlRanges } from "./metadata/yaml-extractor";
+import { extractCitationMetadata, extractCrossrefConfig, extractNonFrontmatterYamlRanges } from "./metadata/yaml-extractor";
 import { parseBracketCitation } from "./parser/bracket-citation";
 import { parseInlineCitation } from "./parser/inline-citation";
 import {
@@ -15,7 +15,7 @@ import type { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
-import { type CrossrefType, isCrossrefKey, parseCrossrefKey } from "./crossref/types";
+import { type CrossrefConfig, type CrossrefType, DEFAULT_CROSSREF_CONFIG, isCrossrefKey, parseCrossrefKey } from "./crossref/types";
 import { renderCrossref } from "./crossref/crossref-renderer";
 import { scanCrossrefDefinitions, type CrossrefDefinitionMap } from "./crossref/definition-scanner";
 import { resolveCrossrefNumber } from "./crossref/numbering";
@@ -52,6 +52,7 @@ export function pandocCitationPlugin(
   const currentLocale: string | undefined = opts.locale;
   let popoverCounter = 0;
   let currentCrossrefDefs: CrossrefDefinitionMap = new Map();
+  let currentCrossrefConfig: CrossrefConfig = { ...DEFAULT_CROSSREF_CONFIG };
 
   // --- Inline rules ---
 
@@ -129,6 +130,7 @@ export function pandocCitationPlugin(
     currentCslStyle = loadCslStyle(metadata.csl, opts);
     popoverCounter = 0;
     currentCrossrefDefs = scanCrossrefDefinitions(state.src);
+    currentCrossrefConfig = extractCrossrefConfig(state.src);
 
     // Remove tokens generated from non-frontmatter YAML blocks
     const yamlRanges = extractNonFrontmatterYamlRanges(state.src);
@@ -192,7 +194,7 @@ export function pandocCitationPlugin(
     idx: number,
   ) => {
     const citations: SingleCitation[] = JSON.parse(tokens[idx].content);
-    return renderBracketCitation(citations, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale, currentCrossrefDefs);
+    return renderBracketCitation(citations, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale, currentCrossrefDefs, currentCrossrefConfig);
   };
 
   md.renderer.rules["pandoc_citation_inline"] = (
@@ -200,7 +202,7 @@ export function pandocCitationPlugin(
     idx: number,
   ) => {
     const data = JSON.parse(tokens[idx].content);
-    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale, currentCrossrefDefs);
+    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale, currentCrossrefDefs, currentCrossrefConfig);
   };
 
   md.renderer.rules["pandoc_bibliography"] = (
@@ -227,6 +229,7 @@ function renderBracketCitation(
   getPopoverId: (() => string) | null,
   locale?: string,
   crossrefDefs?: CrossrefDefinitionMap,
+  crossrefConfig?: CrossrefConfig,
 ): string {
   // If all citations are crossref, render as crossref only
   const allCrossref = citations.every((c) => isCrossrefKey(c.id));
@@ -234,7 +237,7 @@ function renderBracketCitation(
     const parts = citations.map((c) => {
       const cr = parseCrossrefKey(c.id)!;
       const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
-      return renderCrossrefWithWarning(cr.type, cr.label, num);
+      return renderCrossrefWithWarning(cr.type, cr.label, num, crossrefConfig);
     });
     return parts.join("; ");
   }
@@ -250,7 +253,7 @@ function renderBracketCitation(
         const cr = parseCrossrefKey(c.id);
         if (cr) {
           const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
-          parts.push(renderCrossrefWithWarning(cr.type, cr.label, num));
+          parts.push(renderCrossrefWithWarning(cr.type, cr.label, num, crossrefConfig));
         } else {
           parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
         }
@@ -274,7 +277,7 @@ function renderBracketCitation(
       const cr = parseCrossrefKey(c.id);
       if (cr) {
         const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
-        parts.push(renderCrossrefWithWarning(cr.type, cr.label, num));
+        parts.push(renderCrossrefWithWarning(cr.type, cr.label, num, crossrefConfig));
       } else if (knownIds.has(c.id)) {
         parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
       } else {
@@ -308,11 +311,12 @@ function renderCrossrefWithWarning(
   type: CrossrefType,
   label: string,
   number: number | null,
+  config?: CrossrefConfig,
 ): string {
   if (number != null) {
-    return renderCrossref(type, label, number);
+    return renderCrossref(type, label, number, undefined, config);
   }
-  return renderCrossref(type, label, undefined, "pandoc-crossref-warning");
+  return renderCrossref(type, label, undefined, "pandoc-crossref-warning", config);
 }
 
 function renderFallbackBracket(citations: SingleCitation[]): string {
@@ -328,11 +332,12 @@ function renderInlineCitation(
   getPopoverId: (() => string) | null,
   locale?: string,
   crossrefDefs?: CrossrefDefinitionMap,
+  crossrefConfig?: CrossrefConfig,
 ): string {
   const crossref = parseCrossrefKey(id);
   if (crossref) {
     const num = crossrefDefs ? resolveCrossrefNumber(id, crossrefDefs) : null;
-    return renderCrossrefWithWarning(crossref.type, crossref.label, num);
+    return renderCrossrefWithWarning(crossref.type, crossref.label, num, crossrefConfig);
   }
 
   if (!bibData || !bibData.ids.includes(id)) {
