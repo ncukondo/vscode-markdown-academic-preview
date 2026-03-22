@@ -820,3 +820,24 @@ Text with [@smith2020].
     expect(result).toMatch(/A Test Article/);
   });
 });
+
+describe("Crossref: caption rendering — Step 1: detection", () => {
+  it("`: Caption {#fig:a}` is not rendered as plain text with `: ` prefix", () => {
+    const md = createMd();
+    const result = md.render(": Caption {#fig:a}");
+    // The rendered output should not contain the literal `: ` prefix as plain paragraph text
+    expect(result).not.toMatch(/<p>\s*: Caption/);
+  });
+
+  it("`: Caption {#tbl:data}` is not rendered as plain text with `: ` prefix", () => {
+    const md = createMd();
+    const result = md.render(": Caption {#tbl:data}");
+    expect(result).not.toMatch(/<p>\s*: Caption/);
+  });
+
+  it("regular paragraph starting with `: ` without crossref id is unchanged", () => {
+    const md = createMd();
+    const result = md.render(": This is a definition list style text.");
+    expect(result).toMatch(/<p>: This is a definition list style text\.<\/p>/);
+  });
+});
