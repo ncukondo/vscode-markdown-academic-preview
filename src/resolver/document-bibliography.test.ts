@@ -222,4 +222,109 @@ Text.
 
     expect(result.bibData.ids).toContain("smith2020");
   });
+
+  it("resolves CSL style from YAML csl field", () => {
+    const documentText = `---
+bibliography: refs.bib
+csl: custom.csl
+---
+
+Text.
+`;
+    const cslContent = "<style>custom CSL</style>";
+    const files: Record<string, string> = {
+      "/doc/refs.bib": BIBTEX_CONTENT,
+      "/doc/custom.csl": cslContent,
+    };
+    const existingFiles = new Set(Object.keys(files));
+
+    const result = resolveDocumentBibliography({
+      documentText,
+      documentPath: "/doc/paper.md",
+      readFile: (p: string) => files[p] ?? "",
+      exists: (p: string) => existingFiles.has(p),
+    });
+
+    expect(result.cslStyle).toBe(cslContent);
+  });
+
+  it("falls back to defaultCsl when YAML csl is not specified", () => {
+    const documentText = `---
+bibliography: refs.bib
+---
+
+Text.
+`;
+    const defaultCslContent = "<style>default CSL</style>";
+    const files: Record<string, string> = {
+      "/doc/refs.bib": BIBTEX_CONTENT,
+      "/workspace/default.csl": defaultCslContent,
+    };
+    const existingFiles = new Set(Object.keys(files));
+
+    const result = resolveDocumentBibliography({
+      documentText,
+      documentPath: "/doc/paper.md",
+      readFile: (p: string) => {
+        if (!existingFiles.has(p)) throw new Error("not found");
+        return files[p];
+      },
+      exists: (p: string) => existingFiles.has(p),
+      workspaceRoot: "/workspace",
+      defaultCsl: "default.csl",
+    });
+
+    expect(result.cslStyle).toBe(defaultCslContent);
+  });
+
+  it("YAML csl takes precedence over defaultCsl", () => {
+    const documentText = `---
+bibliography: refs.bib
+csl: custom.csl
+---
+
+Text.
+`;
+    const customCsl = "<style>custom</style>";
+    const defaultCsl = "<style>default</style>";
+    const files: Record<string, string> = {
+      "/doc/refs.bib": BIBTEX_CONTENT,
+      "/doc/custom.csl": customCsl,
+      "/workspace/default.csl": defaultCsl,
+    };
+    const existingFiles = new Set(Object.keys(files));
+
+    const result = resolveDocumentBibliography({
+      documentText,
+      documentPath: "/doc/paper.md",
+      readFile: (p: string) => files[p] ?? "",
+      exists: (p: string) => existingFiles.has(p),
+      workspaceRoot: "/workspace",
+      defaultCsl: "default.csl",
+    });
+
+    expect(result.cslStyle).toBe(customCsl);
+  });
+
+  it("returns null cslStyle when no CSL is configured", () => {
+    const documentText = `---
+bibliography: refs.bib
+---
+
+Text.
+`;
+    const files: Record<string, string> = {
+      "/doc/refs.bib": BIBTEX_CONTENT,
+    };
+    const existingFiles = new Set(Object.keys(files));
+
+    const result = resolveDocumentBibliography({
+      documentText,
+      documentPath: "/doc/paper.md",
+      readFile: (p: string) => files[p] ?? "",
+      exists: (p: string) => existingFiles.has(p),
+    });
+
+    expect(result.cslStyle).toBeNull();
+  });
 });
