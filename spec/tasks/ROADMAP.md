@@ -24,9 +24,9 @@
 | 17 | [Citation completion provider](completed/20260322-17-citation-completion-provider.md) | Done | — |
 | 18 | [Citation insert command (QuickPick)](completed/20260322-18-citation-insert-command.md) | Done | — |
 | 19 | [Crossref type detector](completed/20260322-19-crossref-type-detector.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
-| 20 | [Crossref plugin rendering (no numbering)](20260322-20-crossref-plugin-rendering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 20 | [Crossref plugin rendering (no numbering)](completed/20260322-20-crossref-plugin-rendering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 21 | [Crossref definition scanner](completed/20260322-21-crossref-definition-scanner.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
-| 22 | [Crossref numbering](20260322-22-crossref-numbering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 22 | [Crossref numbering](completed/20260322-22-crossref-numbering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 23 | [Crossref numbered rendering in plugin](20260322-23-crossref-numbered-rendering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 24 | [Crossref YAML configuration](20260322-24-crossref-yaml-config.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 
