@@ -225,7 +225,7 @@ const CROSSREF_PREFIX_KEYS: (keyof CrossrefConfig)[] = [
 /**
  * Extract crossref prefix configuration from YAML blocks in a Pandoc markdown document.
  * Supports `figPrefix`, `tblPrefix`, `eqnPrefix`, `secPrefix`, `lstPrefix`.
- * Missing fields use defaults from CROSSREF_DISPLAY_NAMES.
+ * Missing fields use defaults from DEFAULT_CROSSREF_CONFIG.
  */
 export function extractCrossrefConfig(document: string): CrossrefConfig {
   const result: CrossrefConfig = { ...DEFAULT_CROSSREF_CONFIG };
