@@ -90,6 +90,11 @@
           "type": "boolean",
           "default": true,
           "description": "Enable citation popover tooltips in the Markdown preview. When disabled, citations render as plain text without hover popover elements."
+        },
+        "pandocCitationPreview.completionEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable citation key autocomplete. When typing @ in a Markdown file, suggests matching bibliography entries."
         }
       }
     }

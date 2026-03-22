@@ -6,6 +6,7 @@ export interface ExtensionSettings {
   cslSearchDirectories?: string[];
   locale?: string;
   popoverEnabled?: boolean;
+  completionEnabled?: boolean;
 }
 
 export interface ConfigGetter {
@@ -46,6 +47,11 @@ export function readExtensionSettings(config: ConfigGetter): ExtensionSettings {
   const popoverEnabled = config.get<boolean>("popoverEnabled");
   if (popoverEnabled !== undefined) {
     settings.popoverEnabled = popoverEnabled;
+  }
+
+  const completionEnabled = config.get<boolean>("completionEnabled");
+  if (completionEnabled !== undefined) {
+    settings.completionEnabled = completionEnabled;
   }
 
   return settings;

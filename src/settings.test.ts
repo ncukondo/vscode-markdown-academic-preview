@@ -112,4 +112,16 @@ describe("readExtensionSettings", () => {
     expect(settings.defaultBibliography).toBeUndefined();
     expect(settings.searchDirectories).toBeUndefined();
   });
+
+  it("reads completionEnabled boolean", () => {
+    const config = createMockConfig({ completionEnabled: false });
+    const settings = readExtensionSettings(config);
+    expect(settings.completionEnabled).toBe(false);
+  });
+
+  it("omits completionEnabled when undefined", () => {
+    const config = createMockConfig({});
+    const settings = readExtensionSettings(config);
+    expect(settings.completionEnabled).toBeUndefined();
+  });
 });
