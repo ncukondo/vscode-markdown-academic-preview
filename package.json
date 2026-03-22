@@ -34,6 +34,12 @@
     "onLanguage:markdown"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "pandocCitationPreview.insertCitation",
+        "title": "Pandoc Citation: Insert Citation"
+      }
+    ],
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [
       "./media/citation-popover.css"
