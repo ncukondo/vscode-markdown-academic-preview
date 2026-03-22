@@ -17,6 +17,7 @@ import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 import { isCrossrefKey, parseCrossrefKey } from "./crossref/types";
 import { renderCrossref } from "./crossref/crossref-renderer";
+import { escapeHtml } from "./renderer/escape-html";
 
 export interface PluginOptions {
   enabled?: boolean;
@@ -237,10 +238,6 @@ function renderBracketCitation(
   const crossrefCitations = citations.filter((c) => isCrossrefKey(c.id));
 
   if (!bibData || bibData.ids.length === 0) {
-    if (crossrefCitations.length > 0 && bibCitations.length === 0) {
-      // Only crossref (already handled above)
-      return "";
-    }
     return renderFallbackBracket(bibCitations);
   }
 
@@ -613,12 +610,4 @@ function addBibEntryIds(html: string): string {
     /data-csl-entry-id="([^"]+)"/g,
     'id="ref-$1" data-csl-entry-id="$1"',
   );
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

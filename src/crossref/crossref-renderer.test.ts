@@ -37,4 +37,18 @@ describe("renderCrossref", () => {
       '<span class="pandoc-crossref">Listing: code1</span>',
     );
   });
+
+  it("unknown type falls back gracefully", () => {
+    // At runtime, type could be an unexpected string
+    const result = renderCrossref("unknown" as never, "foo");
+    expect(result).toBe(
+      '<span class="pandoc-crossref">unknown: foo</span>',
+    );
+  });
+
+  it("HTML-escapes the label parameter", () => {
+    expect(renderCrossref("fig", '<img onerror="xss">')).toBe(
+      '<span class="pandoc-crossref">Figure: &lt;img onerror=&quot;xss&quot;&gt;</span>',
+    );
+  });
 });
