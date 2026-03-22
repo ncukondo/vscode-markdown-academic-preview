@@ -568,6 +568,12 @@ describe("Crossref: render crossref tokens", () => {
     expect(result).toMatch(/unknown-key/);
   });
 
+  it("undefined crossref renders with warning class in HTML", () => {
+    const md = createMd();
+    const result = md.render("See @fig:diagram for details.");
+    expect(result).toContain('<span class="pandoc-crossref pandoc-crossref-warning">Figure: diagram</span>');
+  });
+
   it("crossref-only bracket does not produce bibliography", () => {
     const md = createMd();
     const result = md.render("[@fig:a]");

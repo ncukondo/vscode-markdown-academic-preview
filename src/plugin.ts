@@ -15,7 +15,7 @@ import type { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
-import { isCrossrefKey, parseCrossrefKey } from "./crossref/types";
+import { type CrossrefType, isCrossrefKey, parseCrossrefKey } from "./crossref/types";
 import { renderCrossref } from "./crossref/crossref-renderer";
 import { scanCrossrefDefinitions, type CrossrefDefinitionMap } from "./crossref/definition-scanner";
 import { resolveCrossrefNumber } from "./crossref/numbering";
@@ -305,16 +305,14 @@ function renderBracketCitation(
 }
 
 function renderCrossrefWithWarning(
-  type: import("./crossref/types").CrossrefType,
+  type: CrossrefType,
   label: string,
   number: number | null,
 ): string {
   if (number != null) {
     return renderCrossref(type, label, number);
   }
-  // Undefined reference — add warning class
-  const base = renderCrossref(type, label);
-  return base.replace('class="pandoc-crossref"', 'class="pandoc-crossref pandoc-crossref-warning"');
+  return renderCrossref(type, label, undefined, "pandoc-crossref-warning");
 }
 
 function renderFallbackBracket(citations: SingleCitation[]): string {
