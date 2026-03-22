@@ -24,26 +24,26 @@ Each step follows Red-Green-Refactor:
 
 Implement `resolveCrossrefNumber(id: string, definitions: CrossrefDefinitionMap): number | null`.
 
-- [ ] Write test: `resolveCrossrefNumber("fig:a", defs)` → `1` when `fig:a` is defined with order 1
-- [ ] Write test: `resolveCrossrefNumber("fig:missing", defs)` → `null` when not defined
-- [ ] Write test: `resolveCrossrefNumber("tbl:x", defs)` → `1` (independent numbering per type)
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `resolveCrossrefNumber("fig:a", defs)` → `1` when `fig:a` is defined with order 1
+- [x] Write test: `resolveCrossrefNumber("fig:missing", defs)` → `null` when not defined
+- [x] Write test: `resolveCrossrefNumber("tbl:x", defs)` → `1` (independent numbering per type)
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: Resolve all crossref references in a document
 
 Implement `resolveAllCrossrefs(ids: string[], definitions: CrossrefDefinitionMap)` that returns a map of id → number for all resolvable references.
 
-- [ ] Write test: returns numbers for defined ids, omits undefined ids
-- [ ] Write test: empty input returns empty map
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: returns numbers for defined ids, omits undefined ids
+- [x] Write test: empty input returns empty map
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
