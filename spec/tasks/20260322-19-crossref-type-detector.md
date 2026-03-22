@@ -23,40 +23,40 @@ Each step follows Red-Green-Refactor:
 
 Define the `CrossrefType` union type and the `CROSSREF_PREFIXES` constant.
 
-- [ ] Write test: `CROSSREF_PREFIXES` contains exactly `["fig:", "tbl:", "eq:", "sec:", "lst:"]`
-- [ ] Create stub `src/crossref/types.ts` (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `CROSSREF_PREFIXES` contains exactly `["fig:", "tbl:", "eq:", "sec:", "lst:"]`
+- [x] Create stub `src/crossref/types.ts` (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: Parse crossref key
 
 Implement `parseCrossrefKey(key: string)` that returns `{ type, label }` or `null`.
 
-- [ ] Write test: `parseCrossrefKey("fig:diagram1")` → `{ type: "fig", label: "diagram1" }`
-- [ ] Write test: `parseCrossrefKey("tbl:results")` → `{ type: "tbl", label: "results" }`
-- [ ] Write test: `parseCrossrefKey("eq:euler")` → `{ type: "eq", label: "euler" }`
-- [ ] Write test: `parseCrossrefKey("sec:intro")` → `{ type: "sec", label: "intro" }`
-- [ ] Write test: `parseCrossrefKey("lst:code1")` → `{ type: "lst", label: "lst1" }`
-- [ ] Write test: `parseCrossrefKey("smith2020")` → `null` (regular citation key)
-- [ ] Write test: `parseCrossrefKey("configure:")` → `null` (not a known prefix)
-- [ ] Write test: `parseCrossrefKey("fig:")` → `null` (empty label)
-- [ ] Create stub (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `parseCrossrefKey("fig:diagram1")` → `{ type: "fig", label: "diagram1" }`
+- [x] Write test: `parseCrossrefKey("tbl:results")` → `{ type: "tbl", label: "results" }`
+- [x] Write test: `parseCrossrefKey("eq:euler")` → `{ type: "eq", label: "euler" }`
+- [x] Write test: `parseCrossrefKey("sec:intro")` → `{ type: "sec", label: "intro" }`
+- [x] Write test: `parseCrossrefKey("lst:code1")` → `{ type: "lst", label: "code1" }`
+- [x] Write test: `parseCrossrefKey("smith2020")` → `null` (regular citation key)
+- [x] Write test: `parseCrossrefKey("configure:")` → `null` (not a known prefix)
+- [x] Write test: `parseCrossrefKey("fig:")` → `null` (empty label)
+- [x] Create stub (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: isCrossrefKey utility
 
 Implement `isCrossrefKey(key: string): boolean` as a convenience wrapper.
 
-- [ ] Write test: `isCrossrefKey("fig:x")` → `true`
-- [ ] Write test: `isCrossrefKey("smith2020")` → `false`
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `isCrossrefKey("fig:x")` → `true`
+- [x] Write test: `isCrossrefKey("smith2020")` → `false`
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
