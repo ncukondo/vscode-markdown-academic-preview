@@ -20,6 +20,9 @@
 | 13 | [Extension settings — enabled toggle](completed/20260321-14-settings-enabled.md) | Done | — |
 | 14 | [Extension settings — locale](completed/20260321-15-settings-locale.md) | Done | — |
 | 15 | [Extension settings — popover toggle](completed/20260321-16-settings-popover.md) | Done | — |
+| 16 | [Document bibliography provider](20260322-16-document-bibliography-provider.md) | Todo | — |
+| 17 | [Citation completion provider](20260322-17-citation-completion-provider.md) | Todo | — |
+| 18 | [Citation insert command (QuickPick)](20260322-18-citation-insert-command.md) | Todo | — |
 
 ## Dependency Graph
 
@@ -46,3 +49,11 @@ Phase 11 (plugin) ──→ Phase 12 (file resolution settings)
 
 Phases 12–15 depend on Phase 11 but are independent of each other.
 Phase 12 should be done first as it establishes the configuration infrastructure.
+
+```
+Phase 8 (bib loader) ──→ Phase 16 (doc bib provider) ──→ Phase 17 (completion)
+Phase 6 (yaml) ─────────────────↑                    ──→ Phase 18 (insert command)
+Phase 7 (resolver) ─────────────↑
+```
+
+Phases 17 and 18 depend on Phase 16 but are independent of each other (can be developed in parallel).
