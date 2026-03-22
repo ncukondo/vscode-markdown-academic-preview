@@ -15,7 +15,7 @@ import type { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
-import { type CrossrefConfig, type CrossrefType, DEFAULT_CROSSREF_CONFIG, isCrossrefKey, parseCrossrefKey } from "./crossref/types";
+import { CROSSREF_DISPLAY_NAMES, CROSSREF_TYPE_TO_PREFIX_KEY, type CrossrefConfig, type CrossrefType, DEFAULT_CROSSREF_CONFIG, isCrossrefKey, parseCrossrefKey } from "./crossref/types";
 import { renderCrossref } from "./crossref/crossref-renderer";
 import { scanCrossrefDefinitions, type CrossrefDefinitionMap } from "./crossref/definition-scanner";
 import { resolveCrossrefNumber } from "./crossref/numbering";
@@ -144,6 +144,9 @@ export function pandocCitationPlugin(
       });
     }
 
+    // Transform caption paragraphs (`: Caption {#type:label}`) before stripping definitions
+    transformCaptionParagraphs(state, currentCrossrefDefs, currentCrossrefConfig);
+
     // Strip {#type:label} definition markers from inline content and insert anchors
     stripCrossrefDefinitions(state);
 
@@ -206,6 +209,19 @@ export function pandocCitationPlugin(
   ) => {
     const data = JSON.parse(tokens[idx].content);
     return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale, currentCrossrefDefs, currentCrossrefConfig);
+  };
+
+  md.renderer.rules["pandoc_crossref_caption"] = (
+    tokens: Token[],
+    idx: number,
+  ) => {
+    const data = JSON.parse(tokens[idx].content);
+    const { captionText, type, label, fullId, number: num } = data;
+    const prefix = currentCrossrefConfig
+      ? currentCrossrefConfig[CROSSREF_TYPE_TO_PREFIX_KEY[type as CrossrefType]] ?? CROSSREF_DISPLAY_NAMES[type as CrossrefType]
+      : CROSSREF_DISPLAY_NAMES[type as CrossrefType];
+    const numberText = num != null ? `${prefix}\u00a0${num}: ` : "";
+    return `<p id="${escapeHtml(fullId)}" class="pandoc-crossref-caption">${numberText}${escapeHtml(captionText)}</p>\n`;
   };
 
   md.renderer.rules["pandoc_bibliography"] = (
@@ -652,6 +668,53 @@ function addBibEntryIds(html: string): string {
     /data-csl-entry-id="([^"]+)"/g,
     'id="ref-$1" data-csl-entry-id="$1"',
   );
+}
+
+/** Pattern matching a caption line: starts with `: ` and contains {#type:label} */
+const CAPTION_RE = /^:\s+(.+?)\s*\{#(fig|tbl|eq|sec|lst):([a-zA-Z0-9_][\w-]*)\}\s*$/;
+
+/**
+ * Detect paragraphs matching `: Caption text {#type:label}` and transform
+ * them into pandoc_crossref_caption tokens.
+ */
+function transformCaptionParagraphs(
+  state: StateCore,
+  crossrefDefs: CrossrefDefinitionMap,
+  crossrefConfig: CrossrefConfig,
+): void {
+  const tokens = state.tokens;
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i].type !== "inline") continue;
+    const inlineToken = tokens[i];
+    const content = inlineToken.content;
+
+    const match = CAPTION_RE.exec(content);
+    if (!match) continue;
+
+    // Verify this inline is inside a paragraph (open, inline, close)
+    const pOpen = i - 1;
+    const pClose = i + 1;
+    if (
+      pOpen < 0 || pClose >= tokens.length ||
+      tokens[pOpen].type !== "paragraph_open" ||
+      tokens[pClose].type !== "paragraph_close"
+    ) continue;
+
+    const captionText = match[1];
+    const type = match[2] as CrossrefType;
+    const label = match[3];
+    const fullId = `${type}:${label}`;
+    const num = resolveCrossrefNumber(fullId, crossrefDefs);
+
+    // Replace all three tokens (paragraph_open, inline, paragraph_close) with a single caption token
+    const captionToken = new state.Token("pandoc_crossref_caption", "", 0);
+    captionToken.content = JSON.stringify({ captionText, type, label, fullId, number: num });
+    captionToken.map = tokens[pOpen].map;
+
+    tokens.splice(pOpen, 3, captionToken);
+    // Adjust index since we replaced 3 tokens with 1
+    i = pOpen;
+  }
 }
 
 const CROSSREF_ATTR_RE = /\{#(fig|tbl|eq|sec|lst):([a-zA-Z0-9_][\w-]*)\}/g;

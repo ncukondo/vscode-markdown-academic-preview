@@ -820,3 +820,80 @@ Text with [@smith2020].
     expect(result).toMatch(/A Test Article/);
   });
 });
+
+describe("Crossref: caption rendering — Step 1: detection", () => {
+  it("`: Caption {#fig:a}` is not rendered as plain text with `: ` prefix", () => {
+    const md = createMd();
+    const result = md.render(": Caption {#fig:a}");
+    // The rendered output should not contain the literal `: ` prefix as plain paragraph text
+    expect(result).not.toMatch(/<p>\s*: Caption/);
+  });
+
+  it("`: Caption {#tbl:data}` is not rendered as plain text with `: ` prefix", () => {
+    const md = createMd();
+    const result = md.render(": Caption {#tbl:data}");
+    expect(result).not.toMatch(/<p>\s*: Caption/);
+  });
+
+  it("regular paragraph starting with `: ` without crossref id is unchanged", () => {
+    const md = createMd();
+    const result = md.render(": This is a definition list style text.");
+    expect(result).toMatch(/<p>: This is a definition list style text\.<\/p>/);
+  });
+});
+
+describe("Crossref: caption rendering — Step 2: styled element", () => {
+  it("`: My Figure {#fig:a}` renders as element with class `pandoc-crossref-caption`", () => {
+    const md = createMd();
+    const result = md.render(": My Figure {#fig:a}");
+    expect(result).toContain('class="pandoc-crossref-caption"');
+  });
+
+  it("caption text content is preserved (without raw `: ` prefix and `{#type:label}` suffix)", () => {
+    const md = createMd();
+    const result = md.render(": My Figure {#fig:a}");
+    expect(result).toContain("My Figure");
+    // Should not contain the raw Pandoc `: ` prefix as a paragraph start
+    expect(result).not.toMatch(/>: My Figure/);
+    expect(result).not.toContain("{#fig:a}");
+  });
+
+  it("anchor id is present on the caption element", () => {
+    const md = createMd();
+    const result = md.render(": My Table {#tbl:data}");
+    expect(result).toMatch(/id="tbl:data"/);
+  });
+});
+
+describe("Crossref: caption rendering — Step 3: block association", () => {
+  it("`: Caption {#tbl:data}` followed by a table renders caption above the table", () => {
+    const md = createMd();
+    const src = ": Caption {#tbl:data}\n\n| A | B |\n|---|---|\n| 1 | 2 |";
+    const result = md.render(src);
+    // Caption element should appear before the table
+    const captionIdx = result.indexOf('pandoc-crossref-caption');
+    const tableIdx = result.indexOf('<table>');
+    expect(captionIdx).toBeGreaterThan(-1);
+    expect(tableIdx).toBeGreaterThan(-1);
+    expect(captionIdx).toBeLessThan(tableIdx);
+  });
+
+  it("image followed by `: Caption {#fig:a}` renders caption below the image", () => {
+    const md = createMd();
+    const src = "![alt](img.png)\n\n: Caption {#fig:a}";
+    const result = md.render(src);
+    // Image should appear before the caption
+    const imgIdx = result.indexOf('<img');
+    const captionIdx = result.indexOf('pandoc-crossref-caption');
+    expect(imgIdx).toBeGreaterThan(-1);
+    expect(captionIdx).toBeGreaterThan(-1);
+    expect(imgIdx).toBeLessThan(captionIdx);
+  });
+
+  it("standalone caption (no adjacent block) still renders as caption element", () => {
+    const md = createMd();
+    const result = md.render(": Standalone Caption {#fig:lonely}");
+    expect(result).toContain('pandoc-crossref-caption');
+    expect(result).toContain("Standalone Caption");
+  });
+});
