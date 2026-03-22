@@ -29,7 +29,7 @@
 | 22 | [Crossref numbering](completed/20260322-22-crossref-numbering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 23 | [Crossref numbered rendering in plugin](completed/20260322-23-crossref-numbered-rendering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 24 | [Crossref YAML configuration](completed/20260322-24-crossref-yaml-config.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
-| 25 | [Crossref caption rendering](20260323-25-crossref-caption-rendering.md) | Todo | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 25 | [Crossref caption rendering](completed/20260323-25-crossref-caption-rendering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 
 ## Dependency Graph
 
