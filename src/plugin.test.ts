@@ -662,6 +662,72 @@ describe("Crossref: warning style for undefined references", () => {
   });
 });
 
+describe("Crossref: YAML prefix configuration", () => {
+  it("custom figPrefix in frontmatter renders with custom prefix", () => {
+    const md = createMd();
+    const src = `---
+figPrefix: "Fig."
+---
+
+![Caption](img.png){#fig:a}
+
+See @fig:a for details.
+`;
+    const result = md.render(src);
+    expect(result).toContain("Fig.\u00a01");
+    expect(result).not.toContain("Figure");
+  });
+
+  it("custom eqnPrefix applies to eq type references", () => {
+    const md = createMd();
+    const src = `---
+eqnPrefix: "Eq."
+---
+
+$$ E = mc^2 $$ {#eq:einstein}
+
+See @eq:einstein.
+`;
+    const result = md.render(src);
+    expect(result).toContain("Eq.\u00a01");
+    expect(result).not.toContain("Equation");
+  });
+
+  it("default prefixes used when no YAML config", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee @fig:a for details.";
+    const result = md.render(src);
+    expect(result).toContain("Figure\u00a01");
+  });
+
+  it("custom prefix applies in bracket crossref", () => {
+    const md = createMd();
+    const src = `---
+tblPrefix: "Tbl."
+---
+
+: Caption {#tbl:data}
+
+See [@tbl:data].
+`;
+    const result = md.render(src);
+    expect(result).toContain("Tbl.\u00a01");
+  });
+
+  it("custom prefix applies to undefined crossref (fallback label)", () => {
+    const md = createMd();
+    const src = `---
+figPrefix: "Fig."
+---
+
+See @fig:undefined.
+`;
+    const result = md.render(src);
+    expect(result).toContain("Fig.: undefined");
+    expect(result).toContain("pandoc-crossref-warning");
+  });
+});
+
 describe("Settings: searchDirectories", () => {
   it("resolves bibliography from searchDirectories", () => {
     const md = createMd({
