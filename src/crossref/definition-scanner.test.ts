@@ -60,4 +60,39 @@ describe("scanCrossrefDefinitions", () => {
       expect(result.size).toBe(0);
     });
   });
+
+  describe("order assignment", () => {
+    it("assigns sequential order to same-type definitions", () => {
+      const source = [
+        "![A](a.png){#fig:a}",
+        "![B](b.png){#fig:b}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.get("fig:a")?.order).toBe(1);
+      expect(result.get("fig:b")?.order).toBe(2);
+    });
+
+    it("assigns independent numbering per type", () => {
+      const source = [
+        "![Fig](a.png){#fig:a}",
+        ": Table {#tbl:x}",
+        "![Fig2](b.png){#fig:b}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.get("fig:a")?.order).toBe(1);
+      expect(result.get("tbl:x")?.order).toBe(1);
+      expect(result.get("fig:b")?.order).toBe(2);
+    });
+
+    it("keeps first occurrence for duplicate definitions", () => {
+      const source = [
+        "![First](a.png){#fig:dup}",
+        "![Second](b.png){#fig:dup}",
+        "![Third](c.png){#fig:other}",
+      ].join("\n");
+      const result = scanCrossrefDefinitions(source);
+      expect(result.get("fig:dup")?.order).toBe(1);
+      expect(result.get("fig:other")?.order).toBe(2);
+    });
+  });
 });
