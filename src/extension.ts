@@ -7,7 +7,6 @@ import { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolveDocumentBibliography } from "./resolver/document-bibliography";
 import { readExtensionSettings } from "./settings";
 import { toQuickPickItems, buildInsertText } from "./citation-picker";
-import type { CitationQuickPickItem } from "./citation-picker";
 import * as fs from "fs";
 
 export function activate(context: vscode.ExtensionContext) {
@@ -68,9 +67,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       if (!selected || selected.length === 0) return;
 
-      const text = buildInsertText(
-        (selected as CitationQuickPickItem[]).map((s) => s.citationKey),
-      );
+      const text = buildInsertText(selected.map((s) => s.citationKey));
       await editor.edit((editBuilder) => {
         editBuilder.insert(editor.selection.active, text);
       });
