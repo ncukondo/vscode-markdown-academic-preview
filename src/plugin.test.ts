@@ -841,3 +841,26 @@ describe("Crossref: caption rendering — Step 1: detection", () => {
     expect(result).toMatch(/<p>: This is a definition list style text\.<\/p>/);
   });
 });
+
+describe("Crossref: caption rendering — Step 2: styled element", () => {
+  it("`: My Figure {#fig:a}` renders as element with class `pandoc-crossref-caption`", () => {
+    const md = createMd();
+    const result = md.render(": My Figure {#fig:a}");
+    expect(result).toContain('class="pandoc-crossref-caption"');
+  });
+
+  it("caption text content is preserved (without raw `: ` prefix and `{#type:label}` suffix)", () => {
+    const md = createMd();
+    const result = md.render(": My Figure {#fig:a}");
+    expect(result).toContain("My Figure");
+    // Should not contain the raw Pandoc `: ` prefix as a paragraph start
+    expect(result).not.toMatch(/>: My Figure/);
+    expect(result).not.toContain("{#fig:a}");
+  });
+
+  it("anchor id is present on the caption element", () => {
+    const md = createMd();
+    const result = md.render(": My Table {#tbl:data}");
+    expect(result).toMatch(/id="tbl:data"/);
+  });
+});
