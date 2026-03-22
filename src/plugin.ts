@@ -15,8 +15,10 @@ import type { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolvePath, resolveDefaultBibliography, resolveDefaultCsl } from "./resolver/file-resolver";
 import type { SingleCitation } from "./parser/single-citation";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
-import { isCrossrefKey, parseCrossrefKey } from "./crossref/types";
+import { type CrossrefType, isCrossrefKey, parseCrossrefKey } from "./crossref/types";
 import { renderCrossref } from "./crossref/crossref-renderer";
+import { scanCrossrefDefinitions, type CrossrefDefinitionMap } from "./crossref/definition-scanner";
+import { resolveCrossrefNumber } from "./crossref/numbering";
 import { escapeHtml } from "./renderer/escape-html";
 
 export interface PluginOptions {
@@ -49,6 +51,7 @@ export function pandocCitationPlugin(
   let currentCslStyle: string | null = null;
   const currentLocale: string | undefined = opts.locale;
   let popoverCounter = 0;
+  let currentCrossrefDefs: CrossrefDefinitionMap = new Map();
 
   // --- Inline rules ---
 
@@ -125,6 +128,7 @@ export function pandocCitationPlugin(
     currentBibData = bibData;
     currentCslStyle = loadCslStyle(metadata.csl, opts);
     popoverCounter = 0;
+    currentCrossrefDefs = scanCrossrefDefinitions(state.src);
 
     // Remove tokens generated from non-frontmatter YAML blocks
     const yamlRanges = extractNonFrontmatterYamlRanges(state.src);
@@ -188,7 +192,7 @@ export function pandocCitationPlugin(
     idx: number,
   ) => {
     const citations: SingleCitation[] = JSON.parse(tokens[idx].content);
-    return renderBracketCitation(citations, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale);
+    return renderBracketCitation(citations, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale, currentCrossrefDefs);
   };
 
   md.renderer.rules["pandoc_citation_inline"] = (
@@ -196,7 +200,7 @@ export function pandocCitationPlugin(
     idx: number,
   ) => {
     const data = JSON.parse(tokens[idx].content);
-    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale);
+    return renderInlineCitation(data.id, data.locator, currentBibData, currentCslStyle, popoverEnabled ? getPopoverId : null, currentLocale, currentCrossrefDefs);
   };
 
   md.renderer.rules["pandoc_bibliography"] = (
@@ -222,13 +226,15 @@ function renderBracketCitation(
   cslStyle: string | null,
   getPopoverId: (() => string) | null,
   locale?: string,
+  crossrefDefs?: CrossrefDefinitionMap,
 ): string {
   // If all citations are crossref, render as crossref only
   const allCrossref = citations.every((c) => isCrossrefKey(c.id));
   if (allCrossref) {
     const parts = citations.map((c) => {
       const cr = parseCrossrefKey(c.id)!;
-      return renderCrossref(cr.type, cr.label);
+      const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
+      return renderCrossrefWithWarning(cr.type, cr.label, num);
     });
     return parts.join("; ");
   }
@@ -243,7 +249,8 @@ function renderBracketCitation(
       for (const c of citations) {
         const cr = parseCrossrefKey(c.id);
         if (cr) {
-          parts.push(renderCrossref(cr.type, cr.label));
+          const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
+          parts.push(renderCrossrefWithWarning(cr.type, cr.label, num));
         } else {
           parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
         }
@@ -266,7 +273,8 @@ function renderBracketCitation(
     for (const c of citations) {
       const cr = parseCrossrefKey(c.id);
       if (cr) {
-        parts.push(renderCrossref(cr.type, cr.label));
+        const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
+        parts.push(renderCrossrefWithWarning(cr.type, cr.label, num));
       } else if (knownIds.has(c.id)) {
         parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
       } else {
@@ -296,6 +304,17 @@ function renderBracketCitation(
   return `<cite class="pandoc-citation">${popover.wrapInvoker(escapeHtml(text))}</cite>${popover.element}`;
 }
 
+function renderCrossrefWithWarning(
+  type: CrossrefType,
+  label: string,
+  number: number | null,
+): string {
+  if (number != null) {
+    return renderCrossref(type, label, number);
+  }
+  return renderCrossref(type, label, undefined, "pandoc-crossref-warning");
+}
+
 function renderFallbackBracket(citations: SingleCitation[]): string {
   const keys = citations.map((c) => `@${escapeHtml(c.id)}`).join("; ");
   return `<cite class="pandoc-citation pandoc-citation-warning">[${keys}]</cite>`;
@@ -308,10 +327,12 @@ function renderInlineCitation(
   cslStyle: string | null,
   getPopoverId: (() => string) | null,
   locale?: string,
+  crossrefDefs?: CrossrefDefinitionMap,
 ): string {
   const crossref = parseCrossrefKey(id);
   if (crossref) {
-    return renderCrossref(crossref.type, crossref.label);
+    const num = crossrefDefs ? resolveCrossrefNumber(id, crossrefDefs) : null;
+    return renderCrossrefWithWarning(crossref.type, crossref.label, num);
   }
 
   if (!bibData || !bibData.ids.includes(id)) {

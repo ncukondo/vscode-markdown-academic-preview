@@ -523,16 +523,18 @@ describe("Crossref: skip bibliography lookup for crossref keys", () => {
 });
 
 describe("Crossref: render crossref tokens", () => {
-  it("inline @fig:diagram renders as crossref styled span", () => {
+  it("inline @fig:diagram renders as crossref styled span (with warning for undefined)", () => {
     const md = createMd();
     const result = md.render("See @fig:diagram for details.");
-    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+    expect(result).toContain("pandoc-crossref");
+    expect(result).toContain("Figure: diagram");
   });
 
-  it("bracket [@fig:diagram] renders as crossref styled span", () => {
+  it("bracket [@fig:diagram] renders as crossref styled span (with warning for undefined)", () => {
     const md = createMd();
     const result = md.render("See [@fig:diagram] for details.");
-    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+    expect(result).toContain("pandoc-crossref");
+    expect(result).toContain("Figure: diagram");
   });
 
   it("mixed [@smith2020; @fig:diagram] renders citation + crossref", () => {
@@ -540,26 +542,36 @@ describe("Crossref: render crossref tokens", () => {
     const src = INLINE_REFS_DOC + "See [@smith2020; @fig:diagram].";
     const result = md.render(src);
     expect(result).toMatch(/Smith/);
-    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+    expect(result).toContain("pandoc-crossref");
+    expect(result).toContain("Figure: diagram");
   });
 
   it("@tbl:results renders as Table crossref", () => {
     const md = createMd();
     const result = md.render("See @tbl:results.");
-    expect(result).toContain('<span class="pandoc-crossref">Table: results</span>');
+    expect(result).toContain("pandoc-crossref");
+    expect(result).toContain("Table: results");
   });
 
   it("@eq:euler renders as Equation crossref", () => {
     const md = createMd();
     const result = md.render("See @eq:euler.");
-    expect(result).toContain('<span class="pandoc-crossref">Equation: euler</span>');
+    expect(result).toContain("pandoc-crossref");
+    expect(result).toContain("Equation: euler");
   });
 
   it("mixed crossref + unknown key without bib data renders both", () => {
     const md = createMd();
     const result = md.render("See [@fig:diagram; @unknown-key].");
-    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+    expect(result).toContain("pandoc-crossref");
+    expect(result).toContain("Figure: diagram");
     expect(result).toMatch(/unknown-key/);
+  });
+
+  it("undefined crossref renders with warning class in HTML", () => {
+    const md = createMd();
+    const result = md.render("See @fig:diagram for details.");
+    expect(result).toContain('<span class="pandoc-crossref pandoc-crossref-warning">Figure: diagram</span>');
   });
 
   it("crossref-only bracket does not produce bibliography", () => {
@@ -567,6 +579,86 @@ describe("Crossref: render crossref tokens", () => {
     const result = md.render("[@fig:a]");
     expect(result).not.toMatch(/class="csl-bib-body"/);
     expect(result).not.toMatch(/pandoc-bibliography/);
+  });
+});
+
+describe("Crossref: numbered rendering with definitions", () => {
+  it("inline @fig:a with {#fig:a} defined renders 'Figure 1'", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee @fig:a for details.";
+    const result = md.render(src);
+    expect(result).toContain("Figure\u00a01");
+  });
+
+  it("inline @fig:a without definition renders fallback 'Figure: a'", () => {
+    const md = createMd();
+    const result = md.render("See @fig:a for details.");
+    expect(result).toContain("Figure: a");
+  });
+
+  it("@tbl:x as second table renders 'Table 2'", () => {
+    const md = createMd();
+    const src =
+      ": First caption {#tbl:first}\n\n: Second caption {#tbl:x}\n\nSee @tbl:x.";
+    const result = md.render(src);
+    expect(result).toContain("Table\u00a02");
+  });
+
+  it("bracket [@fig:a] with definition renders 'Figure 1'", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee [@fig:a] for details.";
+    const result = md.render(src);
+    expect(result).toContain("Figure\u00a01");
+  });
+
+  it("bracket [@fig:a] without definition renders fallback 'Figure: a'", () => {
+    const md = createMd();
+    const result = md.render("See [@fig:a] for details.");
+    expect(result).toContain("Figure: a");
+  });
+
+  it("document without definitions produces empty map (crossref renders fallback)", () => {
+    const md = createMd();
+    const result = md.render("@fig:a and @tbl:b.");
+    expect(result).toContain("Figure: a");
+    expect(result).toContain("Table: b");
+  });
+
+  it("document with definitions renders numbered references", () => {
+    const md = createMd();
+    const src =
+      "![Cap](i.png){#fig:a}\n\n: Cap {#tbl:b}\n\nSee @fig:a and @tbl:b.";
+    const result = md.render(src);
+    expect(result).toContain("Figure\u00a01");
+    expect(result).toContain("Table\u00a01");
+  });
+});
+
+describe("Crossref: warning style for undefined references", () => {
+  it("undefined crossref gets pandoc-crossref-warning class", () => {
+    const md = createMd();
+    const result = md.render("See @fig:undefined.");
+    expect(result).toMatch(/pandoc-crossref-warning/);
+  });
+
+  it("defined crossref does not get warning class", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee @fig:a.";
+    const result = md.render(src);
+    expect(result).not.toMatch(/pandoc-crossref-warning/);
+  });
+
+  it("undefined bracket crossref gets warning class", () => {
+    const md = createMd();
+    const result = md.render("See [@fig:undefined].");
+    expect(result).toMatch(/pandoc-crossref-warning/);
+  });
+
+  it("defined bracket crossref does not get warning class", () => {
+    const md = createMd();
+    const src = "![Caption](img.png){#fig:a}\n\nSee [@fig:a].";
+    const result = md.render(src);
+    expect(result).not.toMatch(/pandoc-crossref-warning/);
   });
 });
 
