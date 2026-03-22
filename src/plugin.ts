@@ -238,6 +238,19 @@ function renderBracketCitation(
   const crossrefCitations = citations.filter((c) => isCrossrefKey(c.id));
 
   if (!bibData || bibData.ids.length === 0) {
+    if (crossrefCitations.length > 0) {
+      const parts: string[] = [];
+      for (const c of citations) {
+        const cr = parseCrossrefKey(c.id);
+        if (cr) {
+          parts.push(renderCrossref(cr.type, cr.label));
+        } else {
+          parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
+        }
+      }
+      const inner = parts.join("; ");
+      return `<cite class="pandoc-citation">[${inner}]</cite>`;
+    }
     return renderFallbackBracket(bibCitations);
   }
 

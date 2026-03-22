@@ -555,6 +555,13 @@ describe("Crossref: render crossref tokens", () => {
     expect(result).toContain('<span class="pandoc-crossref">Equation: euler</span>');
   });
 
+  it("mixed crossref + unknown key without bib data renders both", () => {
+    const md = createMd();
+    const result = md.render("See [@fig:diagram; @unknown-key].");
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+    expect(result).toMatch(/unknown-key/);
+  });
+
   it("crossref-only bracket does not produce bibliography", () => {
     const md = createMd();
     const result = md.render("[@fig:a]");
