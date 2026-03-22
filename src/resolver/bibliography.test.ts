@@ -214,6 +214,82 @@ describe("loadBibliography", () => {
     });
   });
 
+  describe("Duplicate IDs across multiple files", () => {
+    it("deduplicates entries with the same id, keeping the first occurrence", async () => {
+      const bib1 = `@article{smith2020, author={Smith, A}, title={First File Title}, journal={J}, year={2020}}`;
+      const bib2 = `@article{smith2020, author={Smith, B}, title={Second File Title}, journal={J}, year={2021}}`;
+      const files: Record<string, string> = {
+        "/refs1.bib": bib1,
+        "/refs2.bib": bib2,
+      };
+      const result = await loadBibliography({
+        bibliographyPaths: ["/refs1.bib", "/refs2.bib"],
+        inlineReferences: [],
+        readFile: async (path) => files[path],
+      });
+
+      expect(result.ids).toHaveLength(1);
+      expect(result.ids).toContain("smith2020");
+      // First file wins (consistent with Pandoc)
+      const entry = result.cite.data.find(
+        (d: { id: string }) => d.id === "smith2020",
+      );
+      expect(entry?.title).toBe("First File Title");
+    });
+
+    it("keeps unique entries from both files while deduplicating shared ids", async () => {
+      const bib1 = `@article{shared, author={A}, title={From First}, journal={J}, year={2020}}
+@article{only1, author={B}, title={Only In First}, journal={J}, year={2020}}`;
+      const bib2 = `@article{shared, author={C}, title={From Second}, journal={J}, year={2021}}
+@article{only2, author={D}, title={Only In Second}, journal={J}, year={2021}}`;
+      const files: Record<string, string> = {
+        "/refs1.bib": bib1,
+        "/refs2.bib": bib2,
+      };
+      const result = await loadBibliography({
+        bibliographyPaths: ["/refs1.bib", "/refs2.bib"],
+        inlineReferences: [],
+        readFile: async (path) => files[path],
+      });
+
+      expect(result.ids).toHaveLength(3);
+      expect(result.ids).toContain("shared");
+      expect(result.ids).toContain("only1");
+      expect(result.ids).toContain("only2");
+      const sharedEntry = result.cite.data.find(
+        (d: { id: string }) => d.id === "shared",
+      );
+      expect(sharedEntry?.title).toBe("From First");
+    });
+
+    it("inline reference still overrides deduplicated file entry", async () => {
+      const bib1 = `@article{smith2020, author={Smith, A}, title={File One}, journal={J}, year={2020}}`;
+      const bib2 = `@article{smith2020, author={Smith, B}, title={File Two}, journal={J}, year={2021}}`;
+      const files: Record<string, string> = {
+        "/refs1.bib": bib1,
+        "/refs2.bib": bib2,
+      };
+      const result = await loadBibliography({
+        bibliographyPaths: ["/refs1.bib", "/refs2.bib"],
+        inlineReferences: [
+          {
+            id: "smith2020",
+            type: "article-journal",
+            title: "Inline Override",
+            author: [{ family: "Smith", given: "A" }],
+          },
+        ],
+        readFile: async (path) => files[path],
+      });
+
+      expect(result.ids).toHaveLength(1);
+      const entry = result.cite.data.find(
+        (d: { id: string }) => d.id === "smith2020",
+      );
+      expect(entry?.title).toBe("Inline Override");
+    });
+  });
+
   describe("Step 6: Error handling", () => {
     it("returns empty result for invalid BibTeX", async () => {
       const result = await loadBibliography({

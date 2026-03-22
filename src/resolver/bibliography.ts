@@ -28,6 +28,16 @@ function isJsonFile(filePath: string): boolean {
   return /\.json$/i.test(filePath);
 }
 
+/** Remove duplicate entries by id, keeping the first occurrence (consistent with Pandoc). */
+function deduplicateById(cite: Cite): void {
+  const seen = new Set<string>();
+  cite.data = cite.data.filter((entry: { id: string }) => {
+    if (seen.has(entry.id)) return false;
+    seen.add(entry.id);
+    return true;
+  });
+}
+
 function parseContent(content: string, filePath: string): unknown {
   if (isYamlFile(filePath)) {
     return parseYaml(content);
@@ -52,6 +62,9 @@ export async function loadBibliography(
       console.warn(`[pandoc-citation-preview] Failed to load bibliography: ${filePath}`, e);
     }
   }
+
+  // Deduplicate entries with the same id across multiple files (first wins, consistent with Pandoc)
+  deduplicateById(cite);
 
   // Merge inline references, overriding any existing entries with the same id
   if (options.inlineReferences.length > 0) {
@@ -78,6 +91,9 @@ export function loadBibliographySync(
       console.warn(`[pandoc-citation-preview] Failed to load bibliography: ${filePath}`, e);
     }
   }
+
+  // Deduplicate entries with the same id across multiple files (first wins, consistent with Pandoc)
+  deduplicateById(cite);
 
   // Merge inline references, overriding any existing entries with the same id
   if (options.inlineReferences.length > 0) {
