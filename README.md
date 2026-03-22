@@ -21,6 +21,14 @@ Renders Pandoc citation syntax directly in the Markdown preview.
 - Hover over a citation to see the full reference in a popover
 - DOIs and URLs are automatically rendered as clickable links
 
+### Citation Autocomplete
+
+Type `@` in a Markdown file to get citation key suggestions from your bibliography. The completion list shows author, year, and title — selecting an item displays the full formatted reference.
+
+### Insert Citation Command
+
+Use the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **Pandoc Citation: Insert Citation** to search and insert one or more citations via a quick picker.
+
 ### Editor Hover
 
 Hover over a citation key in the editor to preview the formatted reference in a tooltip.
@@ -142,6 +150,7 @@ Additional content after the bibliography.
 | `pandocCitationPreview.cslSearchDirectories` | string[] | `[]` | Search directories for CSL style files |
 | `pandocCitationPreview.locale` | string | `""` | Locale for citation rendering (e.g. `"en-US"`, `"ja-JP"`, `"de-DE"`) |
 | `pandocCitationPreview.popoverEnabled` | boolean | `true` | Enable citation popover tooltips in the preview |
+| `pandocCitationPreview.completionEnabled` | boolean | `true` | Enable citation key autocomplete when typing `@` |
 
 ### File path resolution
 
