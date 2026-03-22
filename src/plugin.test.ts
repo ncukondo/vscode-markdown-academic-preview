@@ -522,6 +522,47 @@ describe("Crossref: skip bibliography lookup for crossref keys", () => {
   });
 });
 
+describe("Crossref: render crossref tokens", () => {
+  it("inline @fig:diagram renders as crossref styled span", () => {
+    const md = createMd();
+    const result = md.render("See @fig:diagram for details.");
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+  });
+
+  it("bracket [@fig:diagram] renders as crossref styled span", () => {
+    const md = createMd();
+    const result = md.render("See [@fig:diagram] for details.");
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+  });
+
+  it("mixed [@smith2020; @fig:diagram] renders citation + crossref", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "See [@smith2020; @fig:diagram].";
+    const result = md.render(src);
+    expect(result).toMatch(/Smith/);
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+  });
+
+  it("@tbl:results renders as Table crossref", () => {
+    const md = createMd();
+    const result = md.render("See @tbl:results.");
+    expect(result).toContain('<span class="pandoc-crossref">Table: results</span>');
+  });
+
+  it("@eq:euler renders as Equation crossref", () => {
+    const md = createMd();
+    const result = md.render("See @eq:euler.");
+    expect(result).toContain('<span class="pandoc-crossref">Equation: euler</span>');
+  });
+
+  it("crossref-only bracket does not produce bibliography", () => {
+    const md = createMd();
+    const result = md.render("[@fig:a]");
+    expect(result).not.toMatch(/class="csl-bib-body"/);
+    expect(result).not.toMatch(/pandoc-bibliography/);
+  });
+});
+
 describe("Settings: searchDirectories", () => {
   it("resolves bibliography from searchDirectories", () => {
     const md = createMd({
