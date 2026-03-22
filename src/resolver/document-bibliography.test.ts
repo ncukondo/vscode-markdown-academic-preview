@@ -140,7 +140,7 @@ Text.
     const entry = result.bibData.cite.data.find(
       (e: { id: string }) => e.id === "smith2020",
     );
-    expect(entry.title).toBe("Overridden Title");
+    expect(entry?.title).toBe("Overridden Title");
   });
 
   it("loads defaultBibliography files in addition to YAML bibliography", () => {

@@ -3,6 +3,7 @@ import {
   loadBibliographySync,
   type BibliographyData,
 } from "./bibliography";
+import type { BibliographyCache } from "./bibliography-cache";
 import {
   resolvePath,
   resolveDefaultBibliography,
@@ -42,6 +43,8 @@ export interface DocumentBibliographyOptions {
   defaultBibliography?: string[];
   /** Default CSL style from settings */
   defaultCsl?: string;
+  /** Optional bibliography cache for performance */
+  bibliographyCache?: BibliographyCache;
 }
 
 function dirName(filePath: string): string {
@@ -85,12 +88,17 @@ export function resolveDocumentBibliography(
     }
   }
 
-  // Load bibliography data
-  const bibData = loadBibliographySync({
-    bibliographyPaths: bibPaths,
-    inlineReferences: metadata.references,
-    readFile: options.readFile,
-  });
+  // Load bibliography data (use cache if available)
+  const bibData = options.bibliographyCache
+    ? options.bibliographyCache.load({
+        bibliographyPaths: bibPaths,
+        inlineReferences: metadata.references,
+      })
+    : loadBibliographySync({
+        bibliographyPaths: bibPaths,
+        inlineReferences: metadata.references,
+        readFile: options.readFile,
+      });
 
   // Resolve CSL style
   const cslCtx: ResolveContext = {
