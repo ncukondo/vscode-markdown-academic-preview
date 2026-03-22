@@ -31,7 +31,7 @@ export function buildCompletionEntries(
     const key = entry.id;
     const detail = formatDetail(entry);
     const title = entry.title ?? "";
-    const insertText = context.insideBracket ? key : `[@${key}]`;
+    const insertText = context.insideBracket ? `@${key}` : `[@${key}]`;
 
     return {
       key,

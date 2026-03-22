@@ -74,4 +74,4 @@ CompletionItemProvider を VS Code に登録する。
 - [x] Lint passes
 - [x] Type check passes
 - [x] Build succeeds
-- [x] Move file to `spec/tasks/completed/`
+- [ ] Move file to `spec/tasks/completed/`

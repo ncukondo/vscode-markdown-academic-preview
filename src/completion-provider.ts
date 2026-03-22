@@ -41,6 +41,9 @@ export function createCitationCompletionProvider(
       const cslEntries: CslEntry[] = bibData.cite.data;
       const entries = buildCompletionEntries(cslEntries, { insideBracket });
 
+      const atPosition = new vscode.Position(position.line, col - 1);
+      const replaceRange = new vscode.Range(atPosition, position);
+
       return entries.map((entry) => {
         const item = new vscode.CompletionItem(
           entry.label,
@@ -50,6 +53,7 @@ export function createCitationCompletionProvider(
         item.documentation = entry.documentation;
         item.filterText = `@${entry.filterText}`;
         item.insertText = entry.insertText;
+        item.range = replaceRange;
         item.sortText = entry.key;
         return item;
       });

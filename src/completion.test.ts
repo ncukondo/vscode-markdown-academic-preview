@@ -128,9 +128,9 @@ describe("buildCompletionEntries", () => {
       issued: { "date-parts": [[2020]] },
     };
 
-    it("inserts only key when inside bracket (e.g. [@|])", () => {
+    it("inserts @key when inside bracket (e.g. [@|])", () => {
       const [item] = buildCompletionEntries([entry], { insideBracket: true });
-      expect(item.insertText).toBe("smith2020");
+      expect(item.insertText).toBe("@smith2020");
     });
 
     it("inserts [@key] when outside bracket", () => {
