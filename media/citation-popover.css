@@ -66,3 +66,9 @@
 .pandoc-citation-popover .csl-entry:last-child {
   margin-bottom: 0;
 }
+
+/* Crossref references — visually distinct from bibliography citations */
+.pandoc-crossref {
+  font-variant: small-caps;
+  color: var(--vscode-textLink-foreground, #3794ff);
+}

@@ -501,6 +501,75 @@ describe("Settings: enabled", () => {
   });
 });
 
+describe("Crossref: skip bibliography lookup for crossref keys", () => {
+  it("@fig:diagram does not trigger unknown citation warning", () => {
+    const md = createMd();
+    const result = md.render("See @fig:diagram for details.");
+    expect(result).not.toMatch(/pandoc-citation-warning/);
+  });
+
+  it("@smith2020 still resolves from bibliography as before", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "@smith2020 says something.";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*class="[^"]*pandoc-citation-inline[^"]*"[^>]*>.*Smith.*<\/cite>/s);
+  });
+
+  it("[@fig:diagram] does not trigger unknown citation warning", () => {
+    const md = createMd();
+    const result = md.render("See [@fig:diagram] for details.");
+    expect(result).not.toMatch(/pandoc-citation-warning/);
+  });
+});
+
+describe("Crossref: render crossref tokens", () => {
+  it("inline @fig:diagram renders as crossref styled span", () => {
+    const md = createMd();
+    const result = md.render("See @fig:diagram for details.");
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+  });
+
+  it("bracket [@fig:diagram] renders as crossref styled span", () => {
+    const md = createMd();
+    const result = md.render("See [@fig:diagram] for details.");
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+  });
+
+  it("mixed [@smith2020; @fig:diagram] renders citation + crossref", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "See [@smith2020; @fig:diagram].";
+    const result = md.render(src);
+    expect(result).toMatch(/Smith/);
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+  });
+
+  it("@tbl:results renders as Table crossref", () => {
+    const md = createMd();
+    const result = md.render("See @tbl:results.");
+    expect(result).toContain('<span class="pandoc-crossref">Table: results</span>');
+  });
+
+  it("@eq:euler renders as Equation crossref", () => {
+    const md = createMd();
+    const result = md.render("See @eq:euler.");
+    expect(result).toContain('<span class="pandoc-crossref">Equation: euler</span>');
+  });
+
+  it("mixed crossref + unknown key without bib data renders both", () => {
+    const md = createMd();
+    const result = md.render("See [@fig:diagram; @unknown-key].");
+    expect(result).toContain('<span class="pandoc-crossref">Figure: diagram</span>');
+    expect(result).toMatch(/unknown-key/);
+  });
+
+  it("crossref-only bracket does not produce bibliography", () => {
+    const md = createMd();
+    const result = md.render("[@fig:a]");
+    expect(result).not.toMatch(/class="csl-bib-body"/);
+    expect(result).not.toMatch(/pandoc-bibliography/);
+  });
+});
+
 describe("Settings: searchDirectories", () => {
   it("resolves bibliography from searchDirectories", () => {
     const md = createMd({

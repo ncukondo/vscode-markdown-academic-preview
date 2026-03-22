@@ -8,6 +8,14 @@ export const CROSSREF_PREFIXES: readonly `${CrossrefType}:`[] = [
   "lst:",
 ];
 
+export const CROSSREF_DISPLAY_NAMES: Record<CrossrefType, string> = {
+  fig: "Figure",
+  tbl: "Table",
+  eq: "Equation",
+  sec: "Section",
+  lst: "Listing",
+};
+
 type StripColon<S extends string> = S extends `${infer T}:` ? T : never;
 
 function stripColon<S extends `${string}:`>(s: S): StripColon<S> {
