@@ -21,8 +21,8 @@
 | 14 | [Extension settings — locale](completed/20260321-15-settings-locale.md) | Done | — |
 | 15 | [Extension settings — popover toggle](completed/20260321-16-settings-popover.md) | Done | — |
 | 16 | [Document bibliography provider](completed/20260322-16-document-bibliography-provider.md) | Done | — |
-| 17 | [Citation completion provider](20260322-17-citation-completion-provider.md) | Todo | — |
-| 18 | [Citation insert command (QuickPick)](20260322-18-citation-insert-command.md) | Todo | — |
+| 17 | [Citation completion provider](completed/20260322-17-citation-completion-provider.md) | Done | — |
+| 18 | [Citation insert command (QuickPick)](completed/20260322-18-citation-insert-command.md) | Done | — |
 
 ## Dependency Graph
 
