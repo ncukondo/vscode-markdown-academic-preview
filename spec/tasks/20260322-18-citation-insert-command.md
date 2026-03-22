@@ -26,48 +26,49 @@ Each step follows Red-Green-Refactor:
 
 文献データから QuickPickItem 配列を生成する純粋関数を作成する。
 
-- [ ] Write test: CSL-JSON エントリから QuickPickItem を生成 — `label`: `@key`, `description`: `Author (Year)`, `detail`: タイトル
-- [ ] Write test: 著者が複数の場合 → `Smith, Jones & Lee (2020)` 形式
-- [ ] Write test: 著者・年・タイトルが欠けている場合のフォールバック
-- [ ] Create stub `src/citation-picker.ts` (verify Red)
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: CSL-JSON エントリから QuickPickItem を生成 — `label`: `@key`, `description`: `Author (Year)`, `detail`: タイトル
+- [x] Write test: 著者が複数の場合 → `Smith, Jones & Lee (2020)` 形式
+- [x] Write test: 著者・年・タイトルが欠けている場合のフォールバック
+- [x] Create stub `src/citation-picker.ts` (verify Red)
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: 挿入テキストの生成
 
 選択されたエントリからカーソル位置に挿入するテキストを生成する。
 
-- [ ] Write test: 単一選択 → `[@key]` を挿入
-- [ ] Write test: 複数選択 → `[@key1; @key2; @key3]` を挿入
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: 単一選択 → `[@key]` を挿入
+- [x] Write test: 複数選択 → `[@key1; @key2; @key3]` を挿入
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: コマンドの実装
 
 VS Code コマンドとして QuickPick を表示し、選択結果をエディタに挿入する。
 
-- [ ] `pandocCitationPreview.insertCitation` コマンドの実装
-- [ ] アクティブエディタが Markdown でない場合は何もしない
-- [ ] QuickPick の `canPickMany: true` で複数選択を有効化
-- [ ] 選択後、カーソル位置に挿入テキストを insert
-- [ ] Lint & type check
+- [x] `pandocCitationPreview.insertCitation` コマンドの実装
+- [x] アクティブエディタが Markdown でない場合は何もしない
+- [x] QuickPick の `canPickMany: true` で複数選択を有効化
+- [x] 選択後、カーソル位置に挿入テキストを insert
+- [x] Lint & type check
 
 ### Step 4: package.json への登録
 
 コマンドとキーバインドの設定を追加する。
 
-- [ ] `contributes.commands` にコマンドを追加
+- [x] `contributes.commands` にコマンドを追加
   - `command`: `pandocCitationPreview.insertCitation`
   - `title`: `Pandoc Citation: Insert Citation`
-- [ ] `contributes.keybindings` にデフォルトキーバインドを追加（任意）
-  - 候補: `Ctrl+Shift+[` (Mac: `Cmd+Shift+[`) — 既存キーバインドと衝突しないか確認
-- [ ] `activationEvents` にコマンドイベントを追加（必要に応じて）
-- [ ] Lint & type check
+- [x] `contributes.keybindings` にデフォルトキーバインドを追加（任意）
+  - `Ctrl+Shift+[` は VS Code 組み込みの fold と衝突するためスキップ
+- [x] `activationEvents` にコマンドイベントを追加（必要に応じて）
+  - `onLanguage:markdown` で既にカバー済み
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`
