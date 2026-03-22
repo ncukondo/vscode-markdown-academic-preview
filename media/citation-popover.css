@@ -72,3 +72,11 @@
   font-variant: small-caps;
   color: var(--vscode-textLink-foreground, #3794ff);
 }
+
+/* Crossref captions — styled to visually associate with adjacent blocks */
+.pandoc-crossref-caption {
+  text-align: center;
+  font-style: italic;
+  margin: 0.25em 0;
+  color: var(--vscode-descriptionForeground, #717171);
+}
