@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CROSSREF_PREFIXES, parseCrossrefKey, isCrossrefKey } from "./types";
+import { CROSSREF_PREFIXES, CROSSREF_DISPLAY_NAMES, parseCrossrefKey, isCrossrefKey } from "./types";
 
 describe("CROSSREF_PREFIXES", () => {
   it("contains exactly the five known prefixes", () => {
@@ -53,6 +53,28 @@ describe("parseCrossrefKey", () => {
 
   it('returns null for "fig:" (empty label)', () => {
     expect(parseCrossrefKey("fig:")).toBeNull();
+  });
+});
+
+describe("CROSSREF_DISPLAY_NAMES", () => {
+  it('maps "fig" to "Figure"', () => {
+    expect(CROSSREF_DISPLAY_NAMES["fig"]).toBe("Figure");
+  });
+
+  it('maps "tbl" to "Table"', () => {
+    expect(CROSSREF_DISPLAY_NAMES["tbl"]).toBe("Table");
+  });
+
+  it('maps "eq" to "Equation"', () => {
+    expect(CROSSREF_DISPLAY_NAMES["eq"]).toBe("Equation");
+  });
+
+  it('maps "sec" to "Section"', () => {
+    expect(CROSSREF_DISPLAY_NAMES["sec"]).toBe("Section");
+  });
+
+  it('maps "lst" to "Listing"', () => {
+    expect(CROSSREF_DISPLAY_NAMES["lst"]).toBe("Listing");
   });
 });
 
