@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { buildCompletionEntries, type CslEntry } from "./completion";
+import {
+  buildCompletionEntries,
+  isInsideBracket,
+  type CslEntry,
+} from "./completion";
 
 describe("buildCompletionEntries", () => {
   describe("Step 1: basic structure", () => {
@@ -113,6 +117,51 @@ describe("buildCompletionEntries", () => {
       };
       const [item] = buildCompletionEntries([noTitle], { insideBracket: false });
       expect(item.documentation).toBe("");
+    });
+  });
+
+  describe("Step 3: insert text generation", () => {
+    const entry: CslEntry = {
+      id: "smith2020",
+      author: [{ family: "Smith" }],
+      title: "Paper",
+      issued: { "date-parts": [[2020]] },
+    };
+
+    it("inserts only key when inside bracket (e.g. [@|])", () => {
+      const [item] = buildCompletionEntries([entry], { insideBracket: true });
+      expect(item.insertText).toBe("smith2020");
+    });
+
+    it("inserts [@key] when outside bracket", () => {
+      const [item] = buildCompletionEntries([entry], { insideBracket: false });
+      expect(item.insertText).toBe("[@smith2020]");
+    });
+  });
+
+  describe("isInsideBracket", () => {
+    it("returns true when @ is after [ on the same line", () => {
+      expect(isInsideBracket("some text [@", 11)).toBe(true);
+    });
+
+    it("returns true when @ is inside [... with preceding content", () => {
+      expect(isInsideBracket("[see @doe2021; @", 15)).toBe(true);
+    });
+
+    it("returns false when no preceding [", () => {
+      expect(isInsideBracket("some text @", 10)).toBe(false);
+    });
+
+    it("returns false when [ is closed by ] before cursor", () => {
+      expect(isInsideBracket("[@doe2021] @", 11)).toBe(false);
+    });
+
+    it("returns true for -@ suppress-author inside bracket", () => {
+      expect(isInsideBracket("[-@", 3)).toBe(true);
+    });
+
+    it("returns false for -@ suppress-author outside bracket", () => {
+      expect(isInsideBracket("text -@", 6)).toBe(false);
     });
   });
 });
