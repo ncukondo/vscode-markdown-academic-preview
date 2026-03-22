@@ -73,12 +73,12 @@ function extractYear(entry: CslEntry): string {
 }
 
 /**
- * Determine if the cursor position (column of `@`) is inside a `[...]` bracket.
- * Scans leftward from the @ position for an unmatched `[`.
+ * Determine if the cursor is inside a `[...]` bracket.
+ * Scans leftward from one before the cursor position for an unmatched `[`.
  */
-export function isInsideBracket(lineText: string, atCol: number): boolean {
+export function isInsideBracket(lineText: string, cursorCol: number): boolean {
   let depth = 0;
-  for (let i = atCol - 1; i >= 0; i--) {
+  for (let i = cursorCol - 1; i >= 0; i--) {
     if (lineText[i] === "]") depth++;
     if (lineText[i] === "[") {
       if (depth === 0) return true;
