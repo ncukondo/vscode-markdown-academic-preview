@@ -1,7 +1,11 @@
 /**
- * Pure logic for building citation completion entries from CSL data.
+ * Pure logic for building citation/crossref completion entries.
  * No vscode dependency — testable standalone.
  */
+
+import type { CrossrefDefinitionMap } from "./crossref/definition-scanner";
+import { CROSSREF_DISPLAY_NAMES } from "./crossref/types";
+import type { CrossrefType } from "./crossref/types";
 
 export interface CslEntry {
   id: string;
@@ -70,6 +74,28 @@ function extractYear(entry: CslEntry): string {
     return String(parts[0][0]);
   }
   return "";
+}
+
+export function buildCrossrefCompletionEntries(
+  definitions: CrossrefDefinitionMap,
+  context: CompletionContext,
+): CompletionEntry[] {
+  const entries: CompletionEntry[] = [];
+  for (const [fullId, def] of definitions) {
+    const displayName = CROSSREF_DISPLAY_NAMES[def.type as CrossrefType] ?? def.type;
+    const detail = `${displayName} ${def.order}`;
+    const insertText = context.insideBracket ? `@${fullId}` : `[@${fullId}]`;
+
+    entries.push({
+      key: fullId,
+      label: fullId,
+      detail,
+      documentation: displayName,
+      filterText: [fullId, displayName].join(" "),
+      insertText,
+    });
+  }
+  return entries;
 }
 
 /**

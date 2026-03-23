@@ -2,8 +2,13 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import { Cite } from "@citation-js/core";
 import "@citation-js/plugin-csl";
-import { buildCompletionEntries, isInsideBracket } from "./completion";
+import {
+  buildCompletionEntries,
+  buildCrossrefCompletionEntries,
+  isInsideBracket,
+} from "./completion";
 import type { CslEntry } from "./completion";
+import { scanCrossrefDefinitions } from "./crossref/definition-scanner";
 import { resolveDocumentBibliography } from "./resolver/document-bibliography";
 import { linkifyUrls } from "./renderer/bibliography-renderer";
 import type { BibliographyCache } from "./resolver/bibliography-cache";
@@ -39,8 +44,10 @@ export function createCitationCompletionProvider(
 
   return {
     provideCompletionItems(document, position) {
+      const documentText = document.getText();
+
       const { bibData, cslStyle } = resolveDocumentBibliography({
-        documentText: document.getText(),
+        documentText,
         documentPath: document.uri.fsPath,
         readFile: (p: string) => fs.readFileSync(p, "utf-8"),
         exists: (p: string) => fs.existsSync(p),
@@ -52,25 +59,34 @@ export function createCitationCompletionProvider(
         bibliographyCache: options.bibliographyCache,
       });
 
-      if (bibData.ids.length === 0) return [];
-
       cachedCslData = new Map();
-      for (const entry of bibData.cite.data as Array<{ id: string }>) {
-        cachedCslData.set(entry.id, entry);
+      if (bibData.ids.length > 0) {
+        for (const entry of bibData.cite.data as Array<{ id: string }>) {
+          cachedCslData.set(entry.id, entry);
+        }
       }
       cachedCslStyle = cslStyle ?? undefined;
 
       const line = document.lineAt(position.line).text;
       const col = position.character;
       const insideBracket = isInsideBracket(line, col);
-
-      const cslEntries: CslEntry[] = bibData.cite.data;
-      const entries = buildCompletionEntries(cslEntries, { insideBracket });
+      const context = { insideBracket };
 
       const atPosition = new vscode.Position(position.line, col - 1);
       const replaceRange = new vscode.Range(atPosition, position);
 
-      return entries.map((entry) => {
+      // Bibliography completion entries
+      const cslEntries: CslEntry[] = bibData.ids.length > 0 ? bibData.cite.data : [];
+      const bibEntries = buildCompletionEntries(cslEntries, context);
+
+      // Crossref completion entries
+      const crossrefDefs = scanCrossrefDefinitions(documentText);
+      const crossrefEntries = buildCrossrefCompletionEntries(crossrefDefs, context);
+
+      const allEntries = [...bibEntries, ...crossrefEntries];
+      if (allEntries.length === 0) return [];
+
+      return allEntries.map((entry) => {
         const item = new vscode.CompletionItem(
           entry.label,
           vscode.CompletionItemKind.Reference,

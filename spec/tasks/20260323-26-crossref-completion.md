@@ -24,44 +24,44 @@ Each step follows Red-Green-Refactor:
 
 Create `buildCrossrefCompletionEntries(definitions, context)` in `src/completion.ts` using `CrossrefDefinitionMap` from the definition scanner.
 
-- [ ] Write test: `{#fig:diagram}` in source → completion entry with key `fig:diagram`, label `fig:diagram`
-- [ ] Write test: detail shows display name and order (e.g. "Figure 1")
-- [ ] Write test: insertText is `@fig:diagram` inside bracket, `[@fig:diagram]` outside bracket
-- [ ] Write test: multiple definitions produce multiple entries
-- [ ] Write test: empty definitions map → empty array
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: `{#fig:diagram}` in source → completion entry with key `fig:diagram`, label `fig:diagram`
+- [x] Write test: detail shows display name and order (e.g. "Figure 1")
+- [x] Write test: insertText is `@fig:diagram` inside bracket, `[@fig:diagram]` outside bracket
+- [x] Write test: multiple definitions produce multiple entries
+- [x] Write test: empty definitions map → empty array
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 2: Filter text for crossref entries
 
 Ensure crossref entries are filterable by type prefix and label.
 
-- [ ] Write test: filterText contains both `fig:diagram` and `Figure`
-- [ ] Write test: typing `@fig:` filters to only figure entries
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: filterText contains both `fig:diagram` and `Figure`
+- [x] Write test: typing `@fig:` filters to only figure entries
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ### Step 3: Integrate into completion provider
 
 Add crossref completion entries to `provideCompletionItems` in `src/completion-provider.ts`.
 
-- [ ] Scan document text with `scanCrossrefDefinitions`
-- [ ] Build crossref entries and merge with bibliography entries
-- [ ] Use `CompletionItemKind.Reference` for crossref items
-- [ ] Lint & type check
+- [x] Scan document text with `scanCrossrefDefinitions`
+- [x] Build crossref entries and merge with bibliography entries
+- [x] Use `CompletionItemKind.Reference` for crossref items
+- [x] Lint & type check
 
 ### Step 4: Documentation for crossref completion items
 
 Show crossref type and label info in the completion item documentation.
 
-- [ ] Write test: documentation shows the crossref type (e.g. "Figure", "Table")
-- [ ] Implement (verify Green)
-- [ ] Lint & type check
+- [x] Write test: documentation shows the crossref type (e.g. "Figure", "Table")
+- [x] Implement (verify Green)
+- [x] Lint & type check
 
 ## Completion Checklist
 
-- [ ] All tests pass
-- [ ] Lint passes
-- [ ] Type check passes
-- [ ] Build succeeds
+- [x] All tests pass
+- [x] Lint passes
+- [x] Type check passes
+- [x] Build succeeds
 - [ ] Move file to `spec/tasks/completed/`

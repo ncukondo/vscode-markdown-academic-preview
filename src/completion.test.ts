@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   buildCompletionEntries,
+  buildCrossrefCompletionEntries,
   isInsideBracket,
   type CslEntry,
 } from "./completion";
+import type { CrossrefDefinitionMap } from "./crossref/definition-scanner";
 
 describe("buildCompletionEntries", () => {
   describe("Step 1: basic structure", () => {
@@ -138,30 +140,145 @@ describe("buildCompletionEntries", () => {
       expect(item.insertText).toBe("[@smith2020]");
     });
   });
+});
 
-  describe("isInsideBracket", () => {
-    it("returns true when @ is after [ on the same line", () => {
-      expect(isInsideBracket("some text [@", 11)).toBe(true);
+describe("buildCrossrefCompletionEntries", () => {
+  describe("Step 1: basic crossref entries", () => {
+    it("produces entry with key and label from {#fig:diagram}", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+      ]);
+      const result = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].key).toBe("fig:diagram");
+      expect(result[0].label).toBe("fig:diagram");
     });
 
-    it("returns true when @ is inside [... with preceding content", () => {
-      expect(isInsideBracket("[see @doe2021; @", 15)).toBe(true);
+    it("detail shows display name and order (e.g. 'Figure 1')", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+      ]);
+      const [item] = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(item.detail).toBe("Figure 1");
     });
 
-    it("returns false when no preceding [", () => {
-      expect(isInsideBracket("some text @", 10)).toBe(false);
+    it("insertText is @fig:diagram inside bracket", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+      ]);
+      const [item] = buildCrossrefCompletionEntries(defs, {
+        insideBracket: true,
+      });
+      expect(item.insertText).toBe("@fig:diagram");
     });
 
-    it("returns false when [ is closed by ] before cursor", () => {
-      expect(isInsideBracket("[@doe2021] @", 11)).toBe(false);
+    it("insertText is [@fig:diagram] outside bracket", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+      ]);
+      const [item] = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(item.insertText).toBe("[@fig:diagram]");
     });
 
-    it("returns true for -@ suppress-author inside bracket", () => {
-      expect(isInsideBracket("[-@", 3)).toBe(true);
+    it("multiple definitions produce multiple entries", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:a", { type: "fig", label: "a", order: 1 }],
+        ["tbl:b", { type: "tbl", label: "b", order: 1 }],
+        ["eq:c", { type: "eq", label: "c", order: 1 }],
+      ]);
+      const result = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(result).toHaveLength(3);
     });
 
-    it("returns false for -@ suppress-author outside bracket", () => {
-      expect(isInsideBracket("text -@", 6)).toBe(false);
+    it("empty definitions map returns empty array", () => {
+      const defs: CrossrefDefinitionMap = new Map();
+      const result = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(result).toEqual([]);
     });
+  });
+
+  describe("Step 2: filter text", () => {
+    it("filterText contains both fig:diagram and Figure", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+      ]);
+      const [item] = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(item.filterText).toContain("fig:diagram");
+      expect(item.filterText).toContain("Figure");
+    });
+
+    it("typing @fig: filters to only figure entries", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:a", { type: "fig", label: "a", order: 1 }],
+        ["tbl:b", { type: "tbl", label: "b", order: 1 }],
+      ]);
+      const result = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      const figEntry = result.find((e) => e.key === "fig:a")!;
+      const tblEntry = result.find((e) => e.key === "tbl:b")!;
+      expect(figEntry.filterText).toContain("fig:");
+      expect(tblEntry.filterText).not.toContain("fig:");
+    });
+  });
+
+  describe("Step 4: documentation", () => {
+    it("documentation shows the crossref type (e.g. 'Figure')", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+      ]);
+      const [item] = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(item.documentation).toContain("Figure");
+    });
+
+    it("documentation shows the crossref type for Table", () => {
+      const defs: CrossrefDefinitionMap = new Map([
+        ["tbl:results", { type: "tbl", label: "results", order: 2 }],
+      ]);
+      const [item] = buildCrossrefCompletionEntries(defs, {
+        insideBracket: false,
+      });
+      expect(item.documentation).toContain("Table");
+    });
+  });
+});
+
+describe("isInsideBracket", () => {
+  it("returns true when @ is after [ on the same line", () => {
+    expect(isInsideBracket("some text [@", 11)).toBe(true);
+  });
+
+  it("returns true when @ is inside [... with preceding content", () => {
+    expect(isInsideBracket("[see @doe2021; @", 15)).toBe(true);
+  });
+
+  it("returns false when no preceding [", () => {
+    expect(isInsideBracket("some text @", 10)).toBe(false);
+  });
+
+  it("returns false when [ is closed by ] before cursor", () => {
+    expect(isInsideBracket("[@doe2021] @", 11)).toBe(false);
+  });
+
+  it("returns true for -@ suppress-author inside bracket", () => {
+    expect(isInsideBracket("[-@", 3)).toBe(true);
+  });
+
+  it("returns false for -@ suppress-author outside bracket", () => {
+    expect(isInsideBracket("text -@", 6)).toBe(false);
   });
 });
