@@ -54,6 +54,18 @@ export function pandocCitationPlugin(
   let currentCrossrefDefs: CrossrefDefinitionMap = new Map();
   let currentCrossrefConfig: CrossrefConfig = { ...DEFAULT_CROSSREF_CONFIG };
 
+  // --- Source preprocessing ---
+  // Strip {#type:label} from math block lines before KaTeX parses them.
+  // e.g. "$$ E=mc^2 $$ {#eq:einstein}" → "$$ E=mc^2 $$\n{#eq:einstein}"
+  const originalParse = md.parse.bind(md);
+  md.parse = (src: string, env: unknown) => {
+    const preprocessed = src.replace(
+      /(\$\$[^$]*\$\$)\s*(\{#(?:fig|tbl|eq|sec|lst):[a-zA-Z0-9_][\w-]*\})/g,
+      "$1\n$2",
+    );
+    return originalParse(preprocessed, env);
+  };
+
   // --- Inline rules ---
 
   // Bracketed citations: [@key], [@key, p. 10], [-@key], [@k1; @k2]

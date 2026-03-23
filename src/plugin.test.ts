@@ -748,6 +748,14 @@ describe("Crossref: definition markers stripped from output", () => {
     expect(result).toContain('<a id="sec:intro"></a>');
   });
 
+  it("{#eq:label} after $$ math block does not break KaTeX", () => {
+    const md = createMd();
+    const result = md.render("$$ E = mc^2 $$ {#eq:einstein}\n\nSee @eq:einstein.");
+    expect(result).not.toContain("KaTeX parse error");
+    expect(result).not.toContain("{#eq:einstein}");
+    expect(result).toContain('<a id="eq:einstein"></a>');
+  });
+
   it("non-crossref attributes are not stripped", () => {
     const md = createMd();
     const result = md.render("Some text {#not-crossref}.");
