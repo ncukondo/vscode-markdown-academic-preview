@@ -1,18 +1,18 @@
 {
-  "name": "vscode-pandoc-citation-preview",
-  "displayName": "Pandoc Citation Preview",
-  "description": "Render Pandoc-style citations (@key, [@key]) in VS Code Markdown Preview",
-  "version": "0.5.0",
+  "name": "vscode-markdown-academic-preview",
+  "displayName": "Markdown Academic Preview",
+  "description": "Academic writing support for VS Code Markdown Preview — citations, cross-references, subscript/superscript, and more (Pandoc-compatible, no Pandoc required)",
+  "version": "0.6.0",
   "publisher": "ncukondo",
   "license": "MIT",
   "icon": "images/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ncukondo/vscode-pandoc-citation-preview"
+    "url": "https://github.com/ncukondo/vscode-markdown-academic-preview"
   },
-  "homepage": "https://github.com/ncukondo/vscode-pandoc-citation-preview#readme",
+  "homepage": "https://github.com/ncukondo/vscode-markdown-academic-preview#readme",
   "bugs": {
-    "url": "https://github.com/ncukondo/vscode-pandoc-citation-preview/issues"
+    "url": "https://github.com/ncukondo/vscode-markdown-academic-preview/issues"
   },
   "engines": {
     "vscode": "^1.80.0"
@@ -28,7 +28,10 @@
     "csl",
     "markdown",
     "preview",
-    "academic"
+    "academic",
+    "crossref",
+    "superscript",
+    "subscript"
   ],
   "activationEvents": [
     "onLanguage:markdown"
@@ -36,8 +39,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "pandocCitationPreview.insertCitation",
-        "title": "Pandoc Citation: Insert Citation"
+        "command": "markdownAcademicPreview.insertCitation",
+        "title": "Markdown Academic: Insert Citation"
       }
     ],
     "markdown.markdownItPlugins": true,
@@ -45,19 +48,19 @@
       "./media/citation-popover.css"
     ],
     "configuration": {
-      "title": "Pandoc Citation Preview",
+      "title": "Markdown Academic Preview",
       "properties": {
-        "pandocCitationPreview.enabled": {
+        "markdownAcademicPreview.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable or disable the Pandoc Citation Preview extension for the current workspace."
+          "description": "Enable or disable the Markdown Academic Preview extension for the current workspace."
         },
-        "pandocCitationPreview.defaultCsl": {
+        "markdownAcademicPreview.defaultCsl": {
           "type": "string",
           "default": "",
           "description": "Default CSL style name (e.g. \"ieee\") or file path. Used when no CSL is specified in YAML frontmatter."
         },
-        "pandocCitationPreview.defaultBibliography": {
+        "markdownAcademicPreview.defaultBibliography": {
           "type": "array",
           "items": {
             "type": "string"
@@ -65,7 +68,7 @@
           "default": [],
           "description": "Default bibliography file paths. These are loaded in addition to any files specified in YAML frontmatter."
         },
-        "pandocCitationPreview.searchDirectories": {
+        "markdownAcademicPreview.searchDirectories": {
           "type": "array",
           "items": {
             "type": "string"
@@ -73,7 +76,7 @@
           "default": [],
           "description": "Directories to search when resolving bibliography file paths."
         },
-        "pandocCitationPreview.cslSearchDirectories": {
+        "markdownAcademicPreview.cslSearchDirectories": {
           "type": "array",
           "items": {
             "type": "string"
@@ -81,17 +84,17 @@
           "default": [],
           "description": "Directories to search when resolving CSL style file paths."
         },
-        "pandocCitationPreview.locale": {
+        "markdownAcademicPreview.locale": {
           "type": "string",
           "default": "",
           "description": "Locale for citation rendering (e.g. \"en-US\", \"ja-JP\", \"de-DE\"). Empty string uses the default (en-US)."
         },
-        "pandocCitationPreview.popoverEnabled": {
+        "markdownAcademicPreview.popoverEnabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable citation popover tooltips in the Markdown preview. When disabled, citations render as plain text without hover popover elements."
         },
-        "pandocCitationPreview.completionEnabled": {
+        "markdownAcademicPreview.completionEnabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable citation key autocomplete. When typing @ in a Markdown file, suggests matching bibliography entries."

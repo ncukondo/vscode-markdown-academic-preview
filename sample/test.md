@@ -2,7 +2,7 @@
 bibliography: refs.bib
 ---
 
-# Pandoc Citation Preview Test
+# Markdown Academic Preview Test
 
 ## Basic Citations
 

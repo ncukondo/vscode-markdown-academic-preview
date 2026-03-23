@@ -1,6 +1,8 @@
-# Pandoc Citation Preview
+# Markdown Academic Preview
 
-A lightweight VS Code extension that renders Pandoc-style citations (`@key`, `[@key]`) directly in the built-in Markdown Preview — **no Pandoc installation required**. It uses citation-js to parse bibliography data from BibTeX / CSL-JSON files and generates formatted citations and reference lists entirely within VS Code.
+A VS Code extension that enhances the built-in Markdown Preview with academic writing features — **citations, cross-references, subscript/superscript, and bibliography rendering** — all without requiring a Pandoc installation.
+
+The extension follows [Pandoc's Markdown syntax](https://pandoc.org/MANUAL.html#citations) for citations and cross-references, so your documents remain fully compatible with Pandoc-based workflows. Bibliography data is parsed from BibTeX / CSL-JSON files using [citation-js](https://citation.js.org/), and everything runs entirely within VS Code.
 
 ![Demo](images/screen-record.gif)
 
@@ -15,6 +17,26 @@ Renders Pandoc citation syntax directly in the Markdown preview.
 - **Author suppression**: `[-@smith2020]` renders only the year
 - **Prefix / suffix**: `[see @smith2020, p. 10]`
 
+### Cross-References
+
+Supports [pandoc-crossref](https://github.com/lierdakil/pandoc-crossref) syntax for numbered references.
+
+- **Figures**: `@fig:label`, `[@fig:label]`
+- **Tables**: `@tbl:label`, `[@tbl:label]`
+- **Equations**: `@eq:label`, `[@eq:label]`
+- **Sections**: `@sec:label`, `[@sec:label]`
+- **Listings**: `@lst:label`, `[@lst:label]`
+- **Captions**: `: Caption text {#fig:label}` with automatic numbering
+- **Customizable prefixes** via YAML frontmatter
+
+### Text Formatting
+
+Renders Pandoc-style inline formatting in the preview.
+
+- **Subscript**: `H~2~O` → H₂O
+- **Superscript**: `x^2^` → x²
+- **Strikethrough**: `~~deleted~~` → ~~deleted~~
+
 ### Interactive Bibliography
 
 - Click a citation to jump to the corresponding bibliography entry
@@ -23,11 +45,11 @@ Renders Pandoc citation syntax directly in the Markdown preview.
 
 ### Citation Autocomplete
 
-Type `@` in a Markdown file to get citation key suggestions from your bibliography. The completion list shows author, year, and title — selecting an item displays the full formatted reference.
+Type `@` in a Markdown file to get citation key and cross-reference suggestions. The completion list shows author, year, and title — selecting an item displays the full formatted reference.
 
 ### Insert Citation Command
 
-Use the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **Pandoc Citation: Insert Citation** to search and insert one or more citations via a quick picker.
+Use the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **Markdown Academic: Insert Citation** to search and insert citations via a quick picker.
 
 ### Editor Hover
 
@@ -139,18 +161,29 @@ By default, the bibliography is appended at the end of the document. To control 
 Additional content after the bibliography.
 ```
 
+### 7. Cross-references
+
+Define cross-reference targets with `{#type:label}` and reference them with `@type:label`:
+
+```markdown
+![](image.png)
+: A schematic diagram {#fig:diagram}
+
+As shown in @fig:diagram, the system consists of ...
+```
+
 ## Extension Settings
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `pandocCitationPreview.enabled` | boolean | `true` | Enable/disable the extension |
-| `pandocCitationPreview.defaultBibliography` | string[] | `[]` | Default bibliography file paths (loaded in addition to YAML frontmatter) |
-| `pandocCitationPreview.defaultCsl` | string | `""` | Default CSL style name (e.g. `"ieee"`) or file path |
-| `pandocCitationPreview.searchDirectories` | string[] | `[]` | Search directories for bibliography files |
-| `pandocCitationPreview.cslSearchDirectories` | string[] | `[]` | Search directories for CSL style files |
-| `pandocCitationPreview.locale` | string | `""` | Locale for citation rendering (e.g. `"en-US"`, `"ja-JP"`, `"de-DE"`) |
-| `pandocCitationPreview.popoverEnabled` | boolean | `true` | Enable citation popover tooltips in the preview |
-| `pandocCitationPreview.completionEnabled` | boolean | `true` | Enable citation key autocomplete when typing `@` |
+| `markdownAcademicPreview.enabled` | boolean | `true` | Enable/disable the extension |
+| `markdownAcademicPreview.defaultBibliography` | string[] | `[]` | Default bibliography file paths (loaded in addition to YAML frontmatter) |
+| `markdownAcademicPreview.defaultCsl` | string | `""` | Default CSL style name (e.g. `"ieee"`) or file path |
+| `markdownAcademicPreview.searchDirectories` | string[] | `[]` | Search directories for bibliography files |
+| `markdownAcademicPreview.cslSearchDirectories` | string[] | `[]` | Search directories for CSL style files |
+| `markdownAcademicPreview.locale` | string | `""` | Locale for citation rendering (e.g. `"en-US"`, `"ja-JP"`, `"de-DE"`) |
+| `markdownAcademicPreview.popoverEnabled` | boolean | `true` | Enable citation popover tooltips in the preview |
+| `markdownAcademicPreview.completionEnabled` | boolean | `true` | Enable citation key autocomplete when typing `@` |
 
 ### File path resolution
 

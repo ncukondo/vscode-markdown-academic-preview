@@ -59,7 +59,7 @@ export async function loadBibliography(
       const content = await options.readFile(filePath);
       cite.add(parseContent(content, filePath));
     } catch (e) {
-      console.warn(`[pandoc-citation-preview] Failed to load bibliography: ${filePath}`, e);
+      console.warn(`[markdown-academic-preview] Failed to load bibliography: ${filePath}`, e);
     }
   }
 
@@ -88,7 +88,7 @@ export function loadBibliographySync(
         cite.add(parseContent(content, filePath));
       }
     } catch (e) {
-      console.warn(`[pandoc-citation-preview] Failed to load bibliography: ${filePath}`, e);
+      console.warn(`[markdown-academic-preview] Failed to load bibliography: ${filePath}`, e);
     }
   }
 

@@ -19,7 +19,7 @@ const { plugins } = require("@citation-js/core") as {
 };
 const cslConfig = plugins.config.get("@csl");
 
-const CUSTOM_TEMPLATE_KEY = "__pandoc-citation-preview-hover__";
+const CUSTOM_TEMPLATE_KEY = "__markdown-academic-preview-hover__";
 
 export interface HoverProviderOptions {
   enabled?: boolean;

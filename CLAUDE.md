@@ -1,6 +1,6 @@
-# Pandoc Citation Preview - VS Code Extension
+# Markdown Academic Preview - VS Code Extension
 
-VS Code の組み込み Markdown Preview を拡張し、Pandoc 形式の引用（`@key`, `[@key]`）をサポートする拡張機能。
+VS Code の組み込み Markdown Preview を拡張し、Pandoc 互換の学術文書機能（引用、相互参照、上付き/下付き文字など）をサポートする拡張機能。
 
 ## Quick Reference
 
@@ -33,11 +33,13 @@ npx tsc --noEmit  # 型チェック
 ```
 src/
   extension.ts          # VS Code extension entry point
+  plugin.ts             # markdown-it plugin integration
+  pandoc-formatting.ts  # Subscript/superscript inline rules
   parser/               # Citation syntax parsers
   metadata/             # YAML metadata extraction
   resolver/             # File path resolution, bibliography loading
   renderer/             # Citation & bibliography rendering
-  plugin.ts             # markdown-it plugin integration
+  crossref/             # Cross-reference support
 spec/
   decisions/            # Architecture Decision Records
   tasks/                # Task files (TDD)
@@ -48,5 +50,5 @@ spec/
 ## Parallel Development
 
 - 並列作業は git worktree を使用
-- worktree は `vscode-pandoc-citation-preview--worktrees/` 内に作成
+- worktree は `vscode-markdown-academic-preview--worktrees/` 内に作成
 - ワーカーは実装・テスト・PR作成まで、マージとROADMAP更新はmainブランチで行う

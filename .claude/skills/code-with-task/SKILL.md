@@ -25,7 +25,7 @@ cd "${PARENT_DIR}/${PROJECT_NAME}--worktrees/<branch-name>"
 npm install
 ```
 
-**パス規則**: worktreeは必ずリポジトリの親ディレクトリ直下の `vscode-pandoc-citation-preview--worktrees/` 内に作成
+**パス規則**: worktreeは必ずリポジトリの親ディレクトリ直下の `vscode-markdown-academic-preview--worktrees/` 内に作成
 
 ## IPC Status Reporting
 

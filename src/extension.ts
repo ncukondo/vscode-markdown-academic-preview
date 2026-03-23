@@ -13,7 +13,7 @@ import * as fs from "fs";
 export function activate(context: vscode.ExtensionContext) {
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 
-  const config = vscode.workspace.getConfiguration("pandocCitationPreview");
+  const config = vscode.workspace.getConfiguration("markdownAcademicPreview");
   const settings = readExtensionSettings(config);
 
   const bibCache = new BibliographyCache({
@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register insert citation command
   const insertCitationCommand = vscode.commands.registerCommand(
-    "pandocCitationPreview.insertCitation",
+    "markdownAcademicPreview.insertCitation",
     async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor || editor.document.languageId !== "markdown") return;

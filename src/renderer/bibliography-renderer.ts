@@ -3,7 +3,7 @@ import { Cite } from "@citation-js/core";
 import type { BibliographyData } from "../resolver/bibliography";
 
 const DEFAULT_TEMPLATE = "apa";
-const CUSTOM_TEMPLATE_KEY = "__pandoc-citation-preview-bib-custom__";
+const CUSTOM_TEMPLATE_KEY = "__markdown-academic-preview-bib-custom__";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { plugins } = require("@citation-js/core") as {

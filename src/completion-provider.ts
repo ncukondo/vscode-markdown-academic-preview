@@ -24,7 +24,7 @@ const { plugins } = require("@citation-js/core") as {
   };
 };
 const cslConfig = plugins.config.get("@csl");
-const CUSTOM_TEMPLATE_KEY = "__pandoc-citation-preview-completion__";
+const CUSTOM_TEMPLATE_KEY = "__markdown-academic-preview-completion__";
 
 export interface CompletionProviderOptions {
   workspaceRoot?: string;
