@@ -20,6 +20,7 @@ import { renderCrossref } from "./crossref/crossref-renderer";
 import { scanCrossrefDefinitions, type CrossrefDefinitionMap } from "./crossref/definition-scanner";
 import { resolveCrossrefNumber } from "./crossref/numbering";
 import { escapeHtml } from "./renderer/escape-html";
+import { pandocFormattingPlugin } from "./pandoc-formatting";
 
 export interface PluginOptions {
   enabled?: boolean;
@@ -44,6 +45,9 @@ export function pandocCitationPlugin(
 
   // Skip all processing when extension is disabled
   if (opts.enabled === false) return;
+
+  // Add Pandoc subscript/superscript formatting rules
+  pandocFormattingPlugin(md);
 
   // Shared state between core rule and renderers via closure
   // (VS Code may use different env objects for parse and render)
@@ -459,7 +463,7 @@ function bibliographyTooltipHtml(
         ...langOpt,
       }),
     );
-    return linkifyUrls(html);
+    return divsToSpans(linkifyUrls(html));
   } catch {
     return "";
   }
@@ -481,7 +485,7 @@ function buildPopover(
   return {
     wrapInvoker: (content) =>
       `<a${href} class="pandoc-citation-invoker" style="anchor-name: --${id}" interestfor="${id}">${content}</a>`,
-    element: `<div popover="hint" id="${id}" class="pandoc-citation-popover" style="position-anchor: --${id}">${tooltipHtml}</div>`,
+    element: `<span popover="hint" id="${id}" class="pandoc-citation-popover" style="position-anchor: --${id}">${tooltipHtml}</span>`,
   };
 }
 
@@ -612,6 +616,14 @@ function loadCslStyle(
 
   // No readFileSync available — treat as built-in style name
   return opts.defaultCsl;
+}
+
+/**
+ * Replace <div> with <span> so the HTML is valid inside <p>.
+ * Used for popover tooltip content that appears inline.
+ */
+function divsToSpans(html: string): string {
+  return html.replace(/<div(\s|>)/g, "<span$1").replace(/<\/div>/g, "</span>");
 }
 
 // --- Utility ---

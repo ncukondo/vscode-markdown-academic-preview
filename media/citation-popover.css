@@ -53,13 +53,17 @@
   text-decoration: underline;
 }
 
-/* CSL bibliography reset inside popover */
+/* CSL bibliography reset inside popover
+   Uses <span> instead of <div> to stay valid inside <p>,
+   but display as block for proper layout */
 .pandoc-citation-popover .csl-bib-body {
+  display: block;
   margin: 0;
   padding: 0;
 }
 
 .pandoc-citation-popover .csl-entry {
+  display: block;
   margin-bottom: 0.5em;
 }
 
