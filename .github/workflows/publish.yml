@@ -28,6 +28,14 @@ jobs:
 
       - run: npm run build
 
-      - run: npx vsce publish
+      - run: npx vsce package
+
+      - name: Publish to VS Code Marketplace
+        run: npx vsce publish --packagePath *.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX
+        run: npx ovsx publish *.vsix
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
