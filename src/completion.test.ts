@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   buildCompletionEntries,
+  buildCrossrefCompletionEntries,
   isInsideBracket,
   type CslEntry,
 } from "./completion";
+import type { CrossrefDefinitionMap } from "./crossref/definition-scanner";
 
 describe("buildCompletionEntries", () => {
   describe("Step 1: basic structure", () => {
@@ -136,6 +138,121 @@ describe("buildCompletionEntries", () => {
     it("inserts [@key] when outside bracket", () => {
       const [item] = buildCompletionEntries([entry], { insideBracket: false });
       expect(item.insertText).toBe("[@smith2020]");
+    });
+  });
+
+  describe("buildCrossrefCompletionEntries", () => {
+    describe("Step 1: basic crossref entries", () => {
+      it("produces entry with key and label from {#fig:diagram}", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+        ]);
+        const result = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(result).toHaveLength(1);
+        expect(result[0].key).toBe("fig:diagram");
+        expect(result[0].label).toBe("fig:diagram");
+      });
+
+      it("detail shows display name and order (e.g. 'Figure 1')", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+        ]);
+        const [item] = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(item.detail).toBe("Figure 1");
+      });
+
+      it("insertText is @fig:diagram inside bracket", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+        ]);
+        const [item] = buildCrossrefCompletionEntries(defs, {
+          insideBracket: true,
+        });
+        expect(item.insertText).toBe("@fig:diagram");
+      });
+
+      it("insertText is [@fig:diagram] outside bracket", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+        ]);
+        const [item] = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(item.insertText).toBe("[@fig:diagram]");
+      });
+
+      it("multiple definitions produce multiple entries", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:a", { type: "fig", label: "a", order: 1 }],
+          ["tbl:b", { type: "tbl", label: "b", order: 1 }],
+          ["eq:c", { type: "eq", label: "c", order: 1 }],
+        ]);
+        const result = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(result).toHaveLength(3);
+      });
+
+      it("empty definitions map returns empty array", () => {
+        const defs: CrossrefDefinitionMap = new Map();
+        const result = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe("Step 2: filter text", () => {
+      it("filterText contains both fig:diagram and Figure", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+        ]);
+        const [item] = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(item.filterText).toContain("fig:diagram");
+        expect(item.filterText).toContain("Figure");
+      });
+
+      it("typing @fig: filters to only figure entries", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:a", { type: "fig", label: "a", order: 1 }],
+          ["tbl:b", { type: "tbl", label: "b", order: 1 }],
+        ]);
+        const result = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        const figEntry = result.find((e) => e.key === "fig:a")!;
+        const tblEntry = result.find((e) => e.key === "tbl:b")!;
+        expect(figEntry.filterText).toContain("fig:");
+        expect(tblEntry.filterText).not.toContain("fig:");
+      });
+    });
+
+    describe("Step 4: documentation", () => {
+      it("documentation shows the crossref type (e.g. 'Figure')", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["fig:diagram", { type: "fig", label: "diagram", order: 1 }],
+        ]);
+        const [item] = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(item.documentation).toContain("Figure");
+      });
+
+      it("documentation shows the crossref type for Table", () => {
+        const defs: CrossrefDefinitionMap = new Map([
+          ["tbl:results", { type: "tbl", label: "results", order: 2 }],
+        ]);
+        const [item] = buildCrossrefCompletionEntries(defs, {
+          insideBracket: false,
+        });
+        expect(item.documentation).toContain("Table");
+      });
     });
   });
 
