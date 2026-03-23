@@ -48,12 +48,16 @@ function formatDescription(entry: CslEntry): string {
 export function toQuickPickItems(
   entries: CslEntry[],
 ): CitationQuickPickItem[] {
-  return entries.map((entry) => ({
-    label: `@${entry.id}`,
-    description: formatDescription(entry),
-    detail: entry.title ?? "",
-    citationKey: entry.id,
-  }));
+  return entries.map((entry) => {
+    const desc = formatDescription(entry);
+    const title = entry.title ?? "";
+    return {
+      label: `@${entry.id}`,
+      description: [desc, title].filter(Boolean).join(" · "),
+      detail: title,
+      citationKey: entry.id,
+    };
+  });
 }
 
 export function buildInsertText(keys: string[]): string {

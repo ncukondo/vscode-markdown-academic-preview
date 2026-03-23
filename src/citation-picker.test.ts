@@ -23,7 +23,7 @@ describe("toQuickPickItems", () => {
     const items = toQuickPickItems(entries);
     expect(items).toHaveLength(1);
     expect(items[0].label).toBe("@smith2020");
-    expect(items[0].description).toBe("Smith (2020)");
+    expect(items[0].description).toBe("Smith (2020) · A Great Paper");
     expect(items[0].detail).toBe("A Great Paper");
   });
 
@@ -39,7 +39,9 @@ describe("toQuickPickItems", () => {
       }),
     ];
     const items = toQuickPickItems(entries);
-    expect(items[0].description).toBe("Smith, Jones & Lee (2020)");
+    expect(items[0].description).toBe(
+      "Smith, Jones & Lee (2020) · Default Title",
+    );
   });
 
   it("handles two authors", () => {
@@ -54,7 +56,7 @@ describe("toQuickPickItems", () => {
       }),
     ];
     const items = toQuickPickItems(entries);
-    expect(items[0].description).toBe("Doe & Roe (2021)");
+    expect(items[0].description).toBe("Doe & Roe (2021) · Default Title");
   });
 
   it("falls back when author is missing", () => {
@@ -71,6 +73,7 @@ describe("toQuickPickItems", () => {
       makeEntry({ id: "noyear", issued: undefined }),
     ];
     const items = toQuickPickItems(entries);
+    expect(items[0].description).toBe("Smith · Default Title");
     expect(items[0].description).not.toContain("undefined");
     expect(items[0].description).not.toContain("()");
   });
@@ -81,6 +84,21 @@ describe("toQuickPickItems", () => {
     ];
     const items = toQuickPickItems(entries);
     expect(items[0].detail).toBe("");
+    expect(items[0].description).toBe("Smith (2020)");
+  });
+
+  it("includes both author and title in description for cross-field search", () => {
+    const entries = [
+      makeEntry({
+        id: "kondo2024",
+        author: [{ family: "Kondo", given: "T" }],
+        title: "AI in Education",
+        issued: { "date-parts": [[2024]] },
+      }),
+    ];
+    const items = toQuickPickItems(entries);
+    expect(items[0].description).toContain("Kondo");
+    expect(items[0].description).toContain("AI in Education");
   });
 });
 
