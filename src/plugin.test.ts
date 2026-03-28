@@ -954,7 +954,7 @@ describe("Step 4: Pandoc-compatible footnote HTML", () => {
   it("footnote ref has class='footnote-ref'", () => {
     const md = createMd();
     const result = md.render("Text[^1].\n\n[^1]: Note.");
-    expect(result).toMatch(/<a [^>]*class="footnote-ref"[^>]*><sup>/);
+    expect(result).toMatch(/<a [^>]*class="[^"]*footnote-ref[^"]*"[^>]*><sup>/);
   });
 
   it("footnote section has role='doc-endnotes' and correct classes", () => {
@@ -1077,5 +1077,38 @@ describe("Step 8: Footnote edge cases", () => {
     const result = md.render("Text[^long].\n\n[^long]: First paragraph.\n\n    Second paragraph.");
     expect(result).toContain("First paragraph.");
     expect(result).toContain("Second paragraph.");
+  });
+});
+
+describe("Footnote preview popover", () => {
+  it("reference footnote shows popover with footnote content", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Important note.");
+    expect(result).toMatch(/interestfor="[^"]*"/);
+    expect(result).toMatch(/popover="hint"/);
+    expect(result).toContain("Important note.");
+  });
+
+  it("inline footnote shows popover with footnote content", () => {
+    const md = createMd();
+    const result = md.render("Text^[an inline note].");
+    expect(result).toMatch(/interestfor="[^"]*"/);
+    expect(result).toMatch(/popover="hint"/);
+    expect(result).toContain("an inline note");
+  });
+
+  it("footnote popover is disabled when popoverEnabled is false", () => {
+    const md = createMd({ popoverEnabled: false });
+    const result = md.render("Text[^1].\n\n[^1]: A note.");
+    expect(result).not.toContain("interestfor");
+    expect(result).not.toContain('popover="hint"');
+  });
+
+  it("footnote ref retains Pandoc-compatible attributes with popover", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    expect(result).toMatch(/role="doc-noteref"/);
+    expect(result).toMatch(/class="[^"]*footnote-ref[^"]*"/);
+    expect(result).toMatch(/<sup>1<\/sup>/);
   });
 });

@@ -60,6 +60,13 @@ export function pandocCitationPlugin(
     if (tokens[idx].meta.subId > 0) caption += `:${tokens[idx].meta.subId}`;
     let refid = id;
     if (tokens[idx].meta.subId > 0) refid += `:${tokens[idx].meta.subId}`;
+
+    const tooltipHtml = currentFootnoteContents.get(tokens[idx].meta.id) || "";
+    if (tooltipHtml && popoverEnabled) {
+      const popoverId = getPopoverId();
+      return `<a href="#fn${id}" class="footnote-ref pandoc-citation-invoker" id="fnref${refid}" role="doc-noteref" style="anchor-name: --${popoverId}" interestfor="${popoverId}"><sup>${caption}</sup></a><span popover="hint" id="${popoverId}" class="pandoc-citation-popover" style="position-anchor: --${popoverId}">${tooltipHtml}</span>`;
+    }
+
     return `<a href="#fn${id}" class="footnote-ref" id="fnref${refid}" role="doc-noteref"><sup>${caption}</sup></a>`;
   };
 
@@ -95,6 +102,10 @@ export function pandocCitationPlugin(
   let popoverCounter = 0;
   let currentCrossrefDefs: CrossrefDefinitionMap = new Map();
   let currentCrossrefConfig: CrossrefConfig = { ...DEFAULT_CROSSREF_CONFIG };
+  let currentFootnoteContents: Map<number, string> = new Map();
+
+  const popoverEnabled = opts.popoverEnabled !== false;
+  const getPopoverId = () => `pandoc-popover-${popoverCounter++}`;
 
   // --- Source preprocessing ---
   // Strip {#type:label} from math block lines before KaTeX parses them.
@@ -158,6 +169,26 @@ export function pandocCitationPlugin(
       return true;
     },
   );
+
+  // --- Core rule: extract footnote content for popovers ---
+  // Runs after footnote_tail (which assembles footnote tokens from env.footnotes.list)
+  // Uses escapeHtml instead of md.renderInline to avoid re-entrant core rule execution
+  md.core.ruler.after("footnote_tail", "pandoc_footnote_content", (state: StateCore) => {
+    currentFootnoteContents = new Map();
+    const list = (state.env as { footnotes?: { list?: Array<{ content?: string; label?: string }> } }).footnotes?.list;
+    if (!list) return;
+
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].content != null) {
+        // Inline footnote — raw text available directly
+        currentFootnoteContents.set(i, escapeHtml(list[i].content!));
+      } else if (list[i].label) {
+        // Reference footnote — extract first line from source
+        const text = extractFootnoteDefinitionText(state.src, list[i].label!);
+        if (text) currentFootnoteContents.set(i, escapeHtml(text));
+      }
+    }
+  });
 
   // --- Core rule: load bibliography and prepare rendering data ---
   md.core.ruler.push("pandoc_citation_resolve", (state: StateCore) => {
@@ -245,9 +276,6 @@ export function pandocCitationPlugin(
   });
 
   // --- Renderers ---
-
-  const popoverEnabled = opts.popoverEnabled !== false;
-  const getPopoverId = () => `pandoc-popover-${popoverCounter++}`;
 
   md.renderer.rules["pandoc_citation"] = (
     tokens: Token[],
@@ -730,6 +758,18 @@ function addBibEntryIds(html: string): string {
     /data-csl-entry-id="([^"]+)"/g,
     'id="ref-$1" data-csl-entry-id="$1"',
   );
+}
+
+/**
+ * Extract the first line of a footnote definition from source text.
+ * Matches `[^label]: content` and returns the content portion.
+ */
+function extractFootnoteDefinitionText(src: string, label: string): string | null {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`^\\[\\^${escaped}\\]:\\s*(.*)$`, "m");
+  const match = re.exec(src);
+  if (!match) return null;
+  return match[1].trim() || null;
 }
 
 /** Pattern matching a caption line: starts with `: ` and contains {#type:label} */

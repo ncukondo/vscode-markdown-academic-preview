@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { pandocCitationPlugin } from "./plugin";
 import type { PluginOptions } from "./plugin";
 import { createCitationHoverProvider } from "./hover";
+import { createFootnoteHoverProvider } from "./footnote-hover";
 import { createCitationCompletionProvider } from "./completion-provider";
 import { BibliographyCache } from "./resolver/bibliography-cache";
 import { resolveDocumentBibliography } from "./resolver/document-bibliography";
@@ -29,6 +30,12 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(
     vscode.languages.registerHoverProvider("markdown", hoverProvider),
+  );
+
+  // Register hover provider for footnote tooltips
+  const footnoteHoverProvider = createFootnoteHoverProvider();
+  context.subscriptions.push(
+    vscode.languages.registerHoverProvider("markdown", footnoteHoverProvider),
   );
 
   // Register insert citation command

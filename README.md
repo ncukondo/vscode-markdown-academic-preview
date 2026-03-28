@@ -1,6 +1,6 @@
 # Markdown Academic Preview
 
-A VS Code extension that enhances the built-in Markdown Preview with academic writing features — **citations, cross-references, subscript/superscript, and bibliography rendering** — all without requiring a Pandoc installation.
+A VS Code extension that enhances the built-in Markdown Preview with academic writing features — **citations, cross-references, footnotes, subscript/superscript, and bibliography rendering** — all without requiring a Pandoc installation.
 
 The extension follows [Pandoc's Markdown syntax](https://pandoc.org/MANUAL.html#citations) for citations and cross-references, so your documents remain fully compatible with Pandoc-based workflows. Bibliography data is parsed from BibTeX / CSL-JSON files using [citation-js](https://citation.js.org/), and everything runs entirely within VS Code.
 
@@ -29,6 +29,16 @@ Supports [pandoc-crossref](https://github.com/lierdakil/pandoc-crossref) syntax 
 - **Captions**: `: Caption text {#fig:label}` with automatic numbering
 - **Customizable prefixes** via YAML frontmatter
 
+### Footnotes
+
+Renders Pandoc footnote syntax with Pandoc-compatible HTML output.
+
+- **Reference footnotes**: `[^1]` with `[^1]: Footnote text` definitions
+- **Inline footnotes**: `^[This is an inline footnote.]`
+- **Multi-paragraph footnotes**: indented continuation paragraphs
+- Hover over a footnote reference in the preview to see the content in a popover
+- Hover over `[^id]` or `^[...]` in the editor to preview the footnote content
+
 ### Text Formatting
 
 Renders Pandoc-style inline formatting in the preview.
@@ -53,7 +63,7 @@ Use the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **Markdown Acad
 
 ### Editor Hover
 
-Hover over a citation key in the editor to preview the formatted reference in a tooltip.
+Hover over a citation key or footnote reference in the editor to preview the content in a tooltip.
 
 ### Bibliography Rendering
 
@@ -161,7 +171,19 @@ By default, the bibliography is appended at the end of the document. To control 
 Additional content after the bibliography.
 ```
 
-### 7. Cross-references
+### 7. Footnotes
+
+```markdown
+Text with a reference footnote[^1] and an inline footnote^[This appears at the bottom.].
+
+[^1]: This is the footnote content.
+
+[^long]: Multi-paragraph footnotes use indented continuation.
+
+    Second paragraph of the footnote.
+```
+
+### 8. Cross-references
 
 Define cross-reference targets with `{#type:label}` and reference them with `@type:label`:
 
