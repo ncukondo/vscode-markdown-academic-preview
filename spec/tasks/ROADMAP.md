@@ -31,6 +31,7 @@
 | 24 | [Crossref YAML configuration](completed/20260322-24-crossref-yaml-config.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 25 | [Crossref caption rendering](completed/20260323-25-crossref-caption-rendering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 26 | [Crossref completion provider](completed/20260323-26-crossref-completion.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
+| 27 | [Footnote support](20260328-27-footnote-support.md) | In Progress | — |
 
 ## Dependency Graph
 
@@ -80,3 +81,10 @@ Phase 23 depends on both Phase 20 and Phase 22.
 Phase 24 depends on Phase 23.
 Phase 25 depends on Phase 23 (definition scanner + numbered rendering).
 Phase 26 depends on Phase 21 (definition scanner).
+
+```
+Phase 11 (plugin) ──→ Phase 27 (footnote support)
+```
+
+Phase 27 depends on Phase 11 (markdown-it plugin integration).
+Uses `markdown-it-footnote` with Pandoc-compatible renderer overrides.
