@@ -2,7 +2,7 @@
   "name": "vscode-markdown-academic-preview",
   "displayName": "Markdown Academic Preview",
   "description": "Academic writing support for VS Code Markdown Preview — citations, cross-references, subscript/superscript, and more (Pandoc-compatible, no Pandoc required)",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "publisher": "ncukondo",
   "license": "MIT",
   "icon": "images/icon.png",
