@@ -21,6 +21,7 @@ import { scanCrossrefDefinitions, type CrossrefDefinitionMap } from "./crossref/
 import { resolveCrossrefNumber } from "./crossref/numbering";
 import { escapeHtml } from "./renderer/escape-html";
 import { pandocFormattingPlugin } from "./pandoc-formatting";
+import footnote from "markdown-it-footnote";
 
 export interface PluginOptions {
   enabled?: boolean;
@@ -48,6 +49,43 @@ export function pandocCitationPlugin(
 
   // Add Pandoc subscript/superscript formatting rules
   pandocFormattingPlugin(md);
+
+  // Add footnote support (reference [^id] and inline ^[...])
+  md.use(footnote);
+
+  // Override footnote renderers for Pandoc-compatible HTML output
+  md.renderer.rules.footnote_ref = (tokens, idx, _options, env, slf) => {
+    const id = slf.rules.footnote_anchor_name!(tokens, idx, _options, env, slf);
+    let caption = Number(tokens[idx].meta.id + 1).toString();
+    if (tokens[idx].meta.subId > 0) caption += `:${tokens[idx].meta.subId}`;
+    let refid = id;
+    if (tokens[idx].meta.subId > 0) refid += `:${tokens[idx].meta.subId}`;
+    return `<a href="#fn${id}" class="footnote-ref" id="fnref${refid}" role="doc-noteref"><sup>${caption}</sup></a>`;
+  };
+
+  md.renderer.rules.footnote_block_open = () => {
+    return '<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">\n<hr />\n<ol>\n';
+  };
+
+  md.renderer.rules.footnote_block_close = () => {
+    return '</ol>\n</section>\n';
+  };
+
+  md.renderer.rules.footnote_open = (tokens, idx, _options, env, slf) => {
+    let id = slf.rules.footnote_anchor_name!(tokens, idx, _options, env, slf);
+    if (tokens[idx].meta.subId > 0) id += `:${tokens[idx].meta.subId}`;
+    return `<li id="fn${id}">\n`;
+  };
+
+  md.renderer.rules.footnote_close = () => {
+    return '</li>\n';
+  };
+
+  md.renderer.rules.footnote_anchor = (tokens, idx, _options, env, slf) => {
+    let id = slf.rules.footnote_anchor_name!(tokens, idx, _options, env, slf);
+    if (tokens[idx].meta.subId > 0) id += `:${tokens[idx].meta.subId}`;
+    return `<a href="#fnref${id}" class="footnote-back" role="doc-backlink">\u21a9\uFE0E</a>`;
+  };
 
   // Shared state between core rule and renderers via closure
   // (VS Code may use different env objects for parse and render)

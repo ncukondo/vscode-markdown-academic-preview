@@ -84,3 +84,35 @@
   margin: 0.25em 0;
   color: var(--vscode-descriptionForeground, #717171);
 }
+
+/* Footnote references — superscript numbers in text */
+.footnote-ref {
+  text-decoration: none;
+}
+
+/* Footnote section at end of document */
+.footnotes {
+  margin-top: 2em;
+  font-size: 0.9em;
+  border-top: 1px solid var(--vscode-editorWidget-border, #454545);
+  padding-top: 1em;
+}
+
+.footnotes ol {
+  padding-left: 1.5em;
+}
+
+.footnotes li {
+  margin-bottom: 0.5em;
+}
+
+/* Footnote backref link */
+.footnote-back {
+  margin-left: 0.25em;
+  text-decoration: none;
+  color: var(--vscode-textLink-foreground, #3794ff);
+}
+
+.footnote-back:hover {
+  text-decoration: underline;
+}

@@ -905,3 +905,177 @@ describe("Crossref: caption rendering — Step 3: block association", () => {
     expect(result).toContain("Standalone Caption");
   });
 });
+
+// ==========================================
+// Footnote support (Phase 27)
+// ==========================================
+
+describe("Step 2: Reference footnote rendering", () => {
+  it("renders a reference footnote with definition", () => {
+    const md = createMd();
+    const result = md.render("Text with a footnote[^1].\n\n[^1]: Footnote text here.");
+    expect(result).toContain("Footnote text here");
+    expect(result).toContain("footnotes");
+  });
+
+  it("renders footnote section at end of document", () => {
+    const md = createMd();
+    const result = md.render("Text[^note].\n\n[^note]: A note.");
+    expect(result).toContain("<section");
+    expect(result).toContain("<ol");
+    expect(result).toContain("<li");
+    expect(result).toContain("A note.");
+  });
+});
+
+describe("Step 3: Inline footnote rendering", () => {
+  it("renders an inline footnote", () => {
+    const md = createMd();
+    const result = md.render("Text with^[an inline footnote].");
+    expect(result).toContain("an inline footnote");
+    expect(result).toContain("footnotes");
+  });
+
+  it("inline footnote text appears in footnote section", () => {
+    const md = createMd();
+    const result = md.render("Hello^[world].");
+    expect(result).toContain("<section");
+    expect(result).toContain("world");
+  });
+});
+
+describe("Step 4: Pandoc-compatible footnote HTML", () => {
+  it("footnote ref renders as <a role='doc-noteref'><sup>N</sup></a>", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    expect(result).toMatch(/<a href="#fn1"[^>]*role="doc-noteref"[^>]*><sup>1<\/sup><\/a>/);
+  });
+
+  it("footnote ref has class='footnote-ref'", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    expect(result).toMatch(/<a [^>]*class="footnote-ref"[^>]*><sup>/);
+  });
+
+  it("footnote section has role='doc-endnotes' and correct classes", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    expect(result).toMatch(/<section[^>]*id="footnotes"[^>]*>/);
+    expect(result).toMatch(/<section[^>]*class="footnotes footnotes-end-of-document"[^>]*>/);
+    expect(result).toMatch(/<section[^>]*role="doc-endnotes"[^>]*>/);
+  });
+
+  it("footnote li has no class='footnote-item'", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    expect(result).toMatch(/<li id="fn1">\n/);
+    expect(result).not.toContain("footnote-item");
+  });
+
+  it("backref has class='footnote-back' and role='doc-backlink'", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    expect(result).toMatch(/<a href="#fnref1"[^>]*class="footnote-back"[^>]*>/);
+    expect(result).toMatch(/<a href="#fnref1"[^>]*role="doc-backlink"[^>]*>/);
+    expect(result).not.toContain("footnote-backref");
+  });
+
+  it("footnote section starts with <hr /> inside section", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    expect(result).toMatch(/<section[^>]*>\n<hr \/>\n<ol>/);
+  });
+});
+
+describe("Step 5: Footnote and superscript non-interference", () => {
+  it("^text^ still renders as <sup> with footnote plugin active", () => {
+    const md = createMd();
+    const result = md.render("x^2^ is a number.");
+    expect(result).toContain("<sup>2</sup>");
+  });
+
+  it("^[inline footnote] does NOT produce superscript markup from ^text^ rule", () => {
+    const md = createMd();
+    const result = md.render("Text^[a note].");
+    // Should be a footnote, not superscript
+    expect(result).toContain("footnotes");
+    expect(result).toContain("a note");
+    // The body text should not contain <sup>[a note]</sup>
+    expect(result).not.toMatch(/<sup>\[a note\]<\/sup>/);
+  });
+
+  it("superscript and inline footnote coexist in same document", () => {
+    const md = createMd();
+    const result = md.render("x^2^ and^[a note].");
+    expect(result).toContain("<sup>2</sup>");
+    expect(result).toContain("a note");
+    expect(result).toContain("footnotes");
+  });
+});
+
+describe("Step 6: Footnote and citation/crossref non-interference", () => {
+  it("bracket citation and footnote ref coexist in same document", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "Text [@smith2020] and[^1].\n\n[^1]: A footnote.";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*<\/cite>/s);
+    expect(result).toContain("footnotes");
+    expect(result).toContain("A footnote");
+  });
+
+  it("inline citation still works with footnotes present", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "@smith2020 says^[a note].";
+    const result = md.render(src);
+    expect(result).toMatch(/<cite[^>]*pandoc-citation-inline[^>]*>/);
+    expect(result).toContain("a note");
+  });
+
+  it("citation inside inline footnote resolves", () => {
+    const md = createMd();
+    const src = INLINE_REFS_DOC + "Text^[See @smith2020].";
+    const result = md.render(src);
+    // The footnote section should contain the rendered citation
+    expect(result).toMatch(/<cite[^>]*>.*Smith.*<\/cite>/s);
+    expect(result).toContain("footnotes");
+  });
+
+  it("[^1] is not parsed as a bracket citation", () => {
+    const md = createMd();
+    const result = md.render("Text[^1].\n\n[^1]: Note.");
+    // Should not contain citation warning (no @)
+    expect(result).not.toContain("pandoc-citation-warning");
+    // Should contain footnote structure
+    expect(result).toContain("footnotes");
+  });
+});
+
+describe("Step 8: Footnote edge cases", () => {
+  it("multiple footnotes are numbered sequentially", () => {
+    const md = createMd();
+    const result = md.render("A[^1] B[^2] C[^3].\n\n[^1]: First.\n\n[^2]: Second.\n\n[^3]: Third.");
+    expect(result).toContain("<sup>1</sup>");
+    expect(result).toContain("<sup>2</sup>");
+    expect(result).toContain("<sup>3</sup>");
+    expect(result).toContain("First.");
+    expect(result).toContain("Second.");
+    expect(result).toContain("Third.");
+  });
+
+  it("same footnote referenced twice produces correct ids", () => {
+    const md = createMd();
+    const result = md.render("A[^1] and B[^1].\n\n[^1]: Shared note.");
+    expect(result).toContain("Shared note.");
+    // Both references should have doc-noteref role
+    const refs = result.match(/role="doc-noteref"/g);
+    expect(refs).not.toBeNull();
+    expect(refs!.length).toBe(2);
+  });
+
+  it("multi-paragraph footnote definition renders correctly", () => {
+    const md = createMd();
+    const result = md.render("Text[^long].\n\n[^long]: First paragraph.\n\n    Second paragraph.");
+    expect(result).toContain("First paragraph.");
+    expect(result).toContain("Second paragraph.");
+  });
+});
