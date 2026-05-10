@@ -55,12 +55,7 @@ export function createCitationHoverProvider(
         bibliographyCache: options.bibliographyCache,
       });
 
-      if (!bibData.ids.includes(citationKey)) return null;
-
-      // Format single bibliography entry (same as bibliography section)
-      const entry = bibData.cite.data.find(
-        (e: { id: string }) => e.id === citationKey,
-      );
+      const entry = bibData.entriesById.get(citationKey);
       if (!entry) return null;
 
       const subset = new Cite([entry]);

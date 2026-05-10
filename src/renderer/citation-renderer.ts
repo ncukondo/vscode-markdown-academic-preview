@@ -52,7 +52,7 @@ export function renderCitation(
   options: CitationRenderOptions,
 ): string {
   const { bibliographyData } = options;
-  const knownIds = new Set(bibliographyData.ids);
+  const knownIds = bibliographyData.entriesById;
   const unknownItems = items.filter((item) => !knownIds.has(item.id));
 
   if (items.length === 0) {
