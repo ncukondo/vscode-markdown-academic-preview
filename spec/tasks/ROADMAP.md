@@ -32,6 +32,7 @@
 | 25 | [Crossref caption rendering](completed/20260323-25-crossref-caption-rendering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 26 | [Crossref completion provider](completed/20260323-26-crossref-completion.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 27 | [Footnote support](completed/20260328-27-footnote-support.md) | Done | — |
+| 28 | [Bibliography large-file performance (Plan C)](20260510-28-bibliography-large-file-perf.md) | Todo | — |
 
 ## Dependency Graph
 
@@ -88,3 +89,11 @@ Phase 11 (plugin) ──→ Phase 27 (footnote support)
 
 Phase 27 depends on Phase 11 (markdown-it plugin integration).
 Uses `markdown-it-footnote` with Pandoc-compatible renderer overrides.
+
+```
+Phase 8 (bib loader) ──→ Phase 28 (large-file perf)
+Phase 11 (plugin) ──────────────↑
+```
+
+Phase 28 depends on Phase 8 (bibliography loader) and Phase 11 (plugin) — refactors
+both for O(1) lookups and lazy citation-js materialization. Tracked in issue #29.
