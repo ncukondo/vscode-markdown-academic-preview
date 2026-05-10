@@ -59,12 +59,7 @@ export function createCitationCompletionProvider(
         bibliographyCache: options.bibliographyCache,
       });
 
-      cachedCslData = new Map();
-      if (bibData.ids.length > 0) {
-        for (const entry of bibData.cite.data as Array<{ id: string }>) {
-          cachedCslData.set(entry.id, entry);
-        }
-      }
+      cachedCslData = bibData.entriesById as Map<string, unknown>;
       cachedCslStyle = cslStyle ?? undefined;
 
       const line = document.lineAt(position.line).text;
@@ -76,7 +71,7 @@ export function createCitationCompletionProvider(
       const replaceRange = new vscode.Range(atPosition, position);
 
       // Bibliography completion entries
-      const cslEntries: CslEntry[] = bibData.ids.length > 0 ? bibData.cite.data : [];
+      const cslEntries: CslEntry[] = Array.from(bibData.entriesById.values()) as CslEntry[];
       const bibEntries = buildCompletionEntries(cslEntries, context);
 
       // Crossref completion entries

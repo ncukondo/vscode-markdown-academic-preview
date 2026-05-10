@@ -1,4 +1,5 @@
 import "@citation-js/plugin-csl";
+import { Cite } from "@citation-js/core";
 import type { BibliographyData } from "../resolver/bibliography";
 
 const DEFAULT_TEMPLATE = "apa";
@@ -72,8 +73,20 @@ export function renderCitation(
     template = CUSTOM_TEMPLATE_KEY;
   }
 
+  // Build a Cite from only the cited entries — avoids relying on the full library
+  // being normalized upfront.
+  const subsetEntries: unknown[] = [];
+  const seen = new Set<string>();
+  for (const item of validItems) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    const e = bibliographyData.entriesById.get(item.id);
+    if (e) subsetEntries.push(e);
+  }
+  const subsetCite = new Cite(subsetEntries);
+
   try {
-    const result = bibliographyData.cite.format("citation", {
+    const result = subsetCite.format("citation", {
       entry,
       template,
       ...(options.locale ? { lang: options.locale } : {}),

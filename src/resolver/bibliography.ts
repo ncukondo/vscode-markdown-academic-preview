@@ -10,6 +10,14 @@ export interface CslEntry {
 }
 
 export interface BibliographyData {
+  /**
+   * Empty stub Cite kept for backward compatibility with the public type.
+   * Internal renderers no longer rely on it; they construct fresh Cite
+   * instances over only the cited subset via `entriesById`.
+   *
+   * @deprecated Use `entriesById` to look up entries; build a Cite over the
+   * subset you need at render time.
+   */
   cite: Cite;
   ids: string[];
   /** O(1) lookup index: id → CSL entry. Built once per load. */
@@ -36,87 +44,126 @@ function isJsonFile(filePath: string): boolean {
   return /\.json$/i.test(filePath);
 }
 
-/** Remove duplicate entries by id, keeping the first occurrence (consistent with Pandoc). */
-function deduplicateById(cite: Cite): void {
-  const seen = new Set<string>();
-  cite.data = cite.data.filter((entry: { id: string }) => {
-    if (seen.has(entry.id)) return false;
-    seen.add(entry.id);
-    return true;
-  });
+/**
+ * Parse a bibliography file into raw CSL entries WITHOUT running them through
+ * citation-js normalization.
+ *
+ * - JSON / YAML: parsed directly into the entry array (already CSL-shape).
+ * - BibTeX and others: must go through citation-js, which both parses the
+ *   format and normalizes. Returns the entries from a temporary Cite.
+ */
+function parseFileEntries(content: string, filePath: string): CslEntry[] {
+  if (!content) return [];
+
+  if (isJsonFile(filePath)) {
+    const parsed = JSON.parse(content);
+    return Array.isArray(parsed)
+      ? parsed.filter((e): e is CslEntry => isCslEntry(e))
+      : isCslEntry(parsed)
+        ? [parsed]
+        : [];
+  }
+
+  if (isYamlFile(filePath)) {
+    const parsed = parseYaml(content);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((e): e is CslEntry => isCslEntry(e));
+    }
+    if (parsed && typeof parsed === "object") {
+      const refs = (parsed as { references?: unknown }).references;
+      if (Array.isArray(refs)) {
+        return refs.filter((e): e is CslEntry => isCslEntry(e));
+      }
+    }
+    return isCslEntry(parsed) ? [parsed as CslEntry] : [];
+  }
+
+  // BibTeX and other formats: must use citation-js to parse.
+  // This still pays the citation-js cost, but typical BibTeX files are small.
+  const tmp = new Cite(content);
+  return tmp.data as CslEntry[];
 }
 
-function parseContent(content: string, filePath: string): unknown {
-  if (isYamlFile(filePath)) {
-    return parseYaml(content);
+function isCslEntry(value: unknown): value is CslEntry {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof (value as { id?: unknown }).id === "string"
+  );
+}
+
+function buildBibliographyData(
+  fileEntries: CslEntry[][],
+  inlineReferences: CslReference[],
+): BibliographyData {
+  const entriesById = new Map<string, CslEntry>();
+  const ids: string[] = [];
+
+  // First-wins dedup across files
+  for (const entries of fileEntries) {
+    for (const entry of entries) {
+      if (entriesById.has(entry.id)) continue;
+      entriesById.set(entry.id, entry);
+      ids.push(entry.id);
+    }
   }
-  if (isJsonFile(filePath)) {
-    return JSON.parse(content);
+
+  // Inline references override file entries with the same id;
+  // new ids are appended to the end (preserves prior load order otherwise).
+  if (inlineReferences.length > 0) {
+    for (const ref of inlineReferences) {
+      if (!entriesById.has(ref.id)) {
+        ids.push(ref.id);
+      }
+      entriesById.set(ref.id, ref as CslEntry);
+    }
   }
-  // BibTeX and other formats: pass as string for citation-js to parse
-  return content;
+
+  // Empty stub Cite — kept for backward-compat with the public type.
+  // Renderers construct their own Cite over the cited subset.
+  const cite = new Cite();
+
+  return { cite, ids, entriesById };
 }
 
 export async function loadBibliography(
   options: LoadOptions,
 ): Promise<BibliographyData> {
-  const cite = new Cite();
+  const fileEntries: CslEntry[][] = [];
 
   for (const filePath of options.bibliographyPaths) {
     try {
       const content = await options.readFile(filePath);
-      cite.add(parseContent(content, filePath));
+      fileEntries.push(parseFileEntries(content, filePath));
     } catch (e) {
-      console.warn(`[markdown-academic-preview] Failed to load bibliography: ${filePath}`, e);
+      console.warn(
+        `[markdown-academic-preview] Failed to load bibliography: ${filePath}`,
+        e,
+      );
     }
   }
 
-  // Deduplicate entries with the same id across multiple files (first wins, consistent with Pandoc)
-  deduplicateById(cite);
-
-  // Merge inline references, overriding any existing entries with the same id
-  if (options.inlineReferences.length > 0) {
-    const inlineIds = new Set(options.inlineReferences.map((r) => r.id));
-    cite.data = cite.data.filter((entry) => !inlineIds.has(entry.id));
-    cite.add(options.inlineReferences);
-  }
-
-  return buildBibliographyData(cite);
-}
-
-function buildBibliographyData(cite: Cite): BibliographyData {
-  const entriesById = new Map<string, CslEntry>();
-  for (const entry of cite.data as CslEntry[]) {
-    entriesById.set(entry.id, entry);
-  }
-  return { cite, ids: cite.getIds(), entriesById };
+  return buildBibliographyData(fileEntries, options.inlineReferences);
 }
 
 export function loadBibliographySync(
   options: LoadSyncOptions,
 ): BibliographyData {
-  const cite = new Cite();
+  const fileEntries: CslEntry[][] = [];
 
   for (const filePath of options.bibliographyPaths) {
     try {
       const content = options.readFile(filePath);
       if (content) {
-        cite.add(parseContent(content, filePath));
+        fileEntries.push(parseFileEntries(content, filePath));
       }
     } catch (e) {
-      console.warn(`[markdown-academic-preview] Failed to load bibliography: ${filePath}`, e);
+      console.warn(
+        `[markdown-academic-preview] Failed to load bibliography: ${filePath}`,
+        e,
+      );
     }
   }
 
-  // Deduplicate entries with the same id across multiple files (first wins, consistent with Pandoc)
-  deduplicateById(cite);
-
-  // Merge inline references, overriding any existing entries with the same id
-  if (options.inlineReferences.length > 0) {
-    const inlineIds = new Set(options.inlineReferences.map((r) => r.id));
-    cite.data = cite.data.filter((entry) => !inlineIds.has(entry.id));
-    cite.add(options.inlineReferences);
-  }
-
-  return buildBibliographyData(cite);
+  return buildBibliographyData(fileEntries, options.inlineReferences);
 }

@@ -137,9 +137,9 @@ Text.
 
     expect(result.bibData.ids).toContain("smith2020");
     // The inline reference should have overridden the file entry
-    const entry = result.bibData.cite.data.find(
-      (e: { id: string }) => e.id === "smith2020",
-    );
+    const entry = result.bibData.entriesById.get("smith2020") as
+      | { title?: string }
+      | undefined;
     expect(entry?.title).toBe("Overridden Title");
   });
 

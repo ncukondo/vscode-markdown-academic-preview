@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      const items = toQuickPickItems(bibData.cite.data);
+      const items = toQuickPickItems(Array.from(bibData.entriesById.values()));
       const selected = await vscode.window.showQuickPick(items, {
         placeHolder: "Search and select citations to insert",
         canPickMany: true,

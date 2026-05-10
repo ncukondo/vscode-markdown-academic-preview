@@ -218,7 +218,8 @@ describe("renderBibliography", () => {
         },
       ]);
       // Add editor to the entry data to trigger locale-dependent "Ed." / "Hrsg."
-      bibData.cite.data[0].editor = [{ family: "Editor", given: "Ed" }];
+      const firstEntry = bibData.entriesById.get("smith2020") as { editor?: unknown };
+      firstEntry.editor = [{ family: "Editor", given: "Ed" }];
 
       const enResult = renderBibliography({
         bibliographyData: bibData,

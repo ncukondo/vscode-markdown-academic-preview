@@ -162,9 +162,9 @@ describe("loadBibliography", () => {
       // Should only have one entry, not duplicated
       expect(result.ids).toHaveLength(1);
       // The inline version should win
-      const entry = result.cite.data.find(
-        (d: { id: string }) => d.id === "smith2020",
-      );
+      const entry = result.entriesById.get("smith2020") as
+        | { title?: string }
+        | undefined;
       expect(entry?.title).toBe("Overridden Title");
     });
   });
@@ -231,9 +231,9 @@ describe("loadBibliography", () => {
       expect(result.ids).toHaveLength(1);
       expect(result.ids).toContain("smith2020");
       // First file wins (consistent with Pandoc)
-      const entry = result.cite.data.find(
-        (d: { id: string }) => d.id === "smith2020",
-      );
+      const entry = result.entriesById.get("smith2020") as
+        | { title?: string }
+        | undefined;
       expect(entry?.title).toBe("First File Title");
     });
 
@@ -256,9 +256,9 @@ describe("loadBibliography", () => {
       expect(result.ids).toContain("shared");
       expect(result.ids).toContain("only1");
       expect(result.ids).toContain("only2");
-      const sharedEntry = result.cite.data.find(
-        (d: { id: string }) => d.id === "shared",
-      );
+      const sharedEntry = result.entriesById.get("shared") as
+        | { title?: string }
+        | undefined;
       expect(sharedEntry?.title).toBe("From First");
     });
 
@@ -283,9 +283,9 @@ describe("loadBibliography", () => {
       });
 
       expect(result.ids).toHaveLength(1);
-      const entry = result.cite.data.find(
-        (d: { id: string }) => d.id === "smith2020",
-      );
+      const entry = result.entriesById.get("smith2020") as
+        | { title?: string }
+        | undefined;
       expect(entry?.title).toBe("Inline Override");
     });
   });
@@ -380,6 +380,31 @@ describe("loadBibliography", () => {
       expect(result.entriesById).toBeInstanceOf(Map);
       expect(result.entriesById.has("sync1")).toBe(true);
     });
+
+    it("CSL-JSON entries skip citation-js normalization (raw reference preserved)", () => {
+      // The exact same object passed in via JSON should land in entriesById.
+      // citation-js's cite.add() would clone+normalize the entry; our fast path
+      // for CSL-JSON files should not.
+      const entry = {
+        id: "raw1",
+        type: "article-journal",
+        title: "Raw",
+        // A field that citation-js does not understand — it should still be present.
+        __markdown_academic_preview_marker: "kept",
+      };
+      const cslJson = JSON.stringify([entry]);
+      const result = loadBibliographySync({
+        bibliographyPaths: ["/refs.json"],
+        inlineReferences: [],
+        readFile: () => cslJson,
+      });
+      const got = result.entriesById.get("raw1") as
+        | { __markdown_academic_preview_marker?: string; title?: string }
+        | undefined;
+      expect(got).toBeDefined();
+      expect(got?.__markdown_academic_preview_marker).toBe("kept");
+      expect(got?.title).toBe("Raw");
+    });
   });
 
   describe("Step 6: Error handling", () => {
@@ -417,7 +442,7 @@ describe("loadBibliography", () => {
       });
 
       expect(result.ids).toHaveLength(0);
-      expect(result.cite.data).toHaveLength(0);
+      expect(result.entriesById.size).toBe(0);
     });
   });
 });
