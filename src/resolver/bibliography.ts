@@ -3,9 +3,17 @@ import "@citation-js/plugin-bibtex";
 import { parse as parseYaml } from "yaml";
 import type { CslReference } from "../metadata/yaml-extractor";
 
+/** A single CSL bibliography entry. Shape mirrors what citation-js stores in `cite.data`. */
+export interface CslEntry {
+  id: string;
+  [key: string]: unknown;
+}
+
 export interface BibliographyData {
   cite: Cite;
   ids: string[];
+  /** O(1) lookup index: id → CSL entry. Built once per load. */
+  entriesById: Map<string, CslEntry>;
 }
 
 export interface LoadOptions {
@@ -73,7 +81,15 @@ export async function loadBibliography(
     cite.add(options.inlineReferences);
   }
 
-  return { cite, ids: cite.getIds() };
+  return buildBibliographyData(cite);
+}
+
+function buildBibliographyData(cite: Cite): BibliographyData {
+  const entriesById = new Map<string, CslEntry>();
+  for (const entry of cite.data as CslEntry[]) {
+    entriesById.set(entry.id, entry);
+  }
+  return { cite, ids: cite.getIds(), entriesById };
 }
 
 export function loadBibliographySync(
@@ -102,5 +118,5 @@ export function loadBibliographySync(
     cite.add(options.inlineReferences);
   }
 
-  return { cite, ids: cite.getIds() };
+  return buildBibliographyData(cite);
 }

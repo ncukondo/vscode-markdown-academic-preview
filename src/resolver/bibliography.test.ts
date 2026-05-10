@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loadBibliography } from "./bibliography";
+import { loadBibliography, loadBibliographySync } from "./bibliography";
 
 describe("loadBibliography", () => {
   describe("Step 1: Load BibTeX (.bib) file", () => {
@@ -287,6 +287,98 @@ describe("loadBibliography", () => {
         (d: { id: string }) => d.id === "smith2020",
       );
       expect(entry?.title).toBe("Inline Override");
+    });
+  });
+
+  describe("entriesById index", () => {
+    it("exposes an O(1) entriesById Map mirroring cite.data", async () => {
+      const cslJson = JSON.stringify([
+        {
+          id: "doe2022",
+          type: "article-journal",
+          title: "Article",
+          author: [{ family: "Doe", given: "Jane" }],
+          issued: { "date-parts": [[2022]] },
+        },
+        {
+          id: "lee2023",
+          type: "book",
+          title: "A Book",
+          author: [{ family: "Lee", given: "Bob" }],
+          issued: { "date-parts": [[2023]] },
+        },
+      ]);
+      const result = await loadBibliography({
+        bibliographyPaths: ["/refs.json"],
+        inlineReferences: [],
+        readFile: async () => cslJson,
+      });
+
+      expect(result.entriesById).toBeInstanceOf(Map);
+      expect(result.entriesById.size).toBe(2);
+      expect(result.entriesById.has("doe2022")).toBe(true);
+      expect(result.entriesById.has("lee2023")).toBe(true);
+      expect(result.entriesById.has("missing")).toBe(false);
+
+      const doe = result.entriesById.get("doe2022") as { id: string; title?: string };
+      expect(doe.id).toBe("doe2022");
+      expect(doe.title).toBe("Article");
+    });
+
+    it("entriesById reflects dedup (first wins)", async () => {
+      const bib1 = `@article{shared, author={A}, title={From First}, journal={J}, year={2020}}`;
+      const bib2 = `@article{shared, author={B}, title={From Second}, journal={J}, year={2021}}`;
+      const files: Record<string, string> = {
+        "/refs1.bib": bib1,
+        "/refs2.bib": bib2,
+      };
+      const result = await loadBibliography({
+        bibliographyPaths: ["/refs1.bib", "/refs2.bib"],
+        inlineReferences: [],
+        readFile: async (path) => files[path],
+      });
+
+      expect(result.entriesById.size).toBe(1);
+      const entry = result.entriesById.get("shared") as { title?: string };
+      expect(entry.title).toBe("From First");
+    });
+
+    it("entriesById reflects inline reference override", async () => {
+      const bibContent = `@article{smith2020, author={Smith, John}, title={Original}, journal={J}, year={2020}}`;
+      const result = await loadBibliography({
+        bibliographyPaths: ["/refs.bib"],
+        inlineReferences: [
+          {
+            id: "smith2020",
+            type: "article-journal",
+            title: "Overridden",
+            author: [{ family: "Smith", given: "John" }],
+          },
+        ],
+        readFile: async () => bibContent,
+      });
+
+      expect(result.entriesById.size).toBe(1);
+      const entry = result.entriesById.get("smith2020") as { title?: string };
+      expect(entry.title).toBe("Overridden");
+    });
+
+    it("loadBibliographySync also exposes entriesById", () => {
+      const cslJson = JSON.stringify([
+        {
+          id: "sync1",
+          type: "article-journal",
+          title: "Sync Article",
+        },
+      ]);
+      const result = loadBibliographySync({
+        bibliographyPaths: ["/refs.json"],
+        inlineReferences: [],
+        readFile: () => cslJson,
+      });
+
+      expect(result.entriesById).toBeInstanceOf(Map);
+      expect(result.entriesById.has("sync1")).toBe(true);
     });
   });
 

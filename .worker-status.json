@@ -1,0 +1,9 @@
+{
+  "branch": "feat/28-bibliography-large-file-perf",
+  "task_file": "spec/tasks/20260510-28-bibliography-large-file-perf.md",
+  "status": "starting",
+  "current_step": "Worktree set up, exploring code",
+  "pr_number": null,
+  "error": null,
+  "updated_at": "2026-05-10T07:53:28Z"
+}

@@ -28,7 +28,11 @@ function makeBibData(
       ...(e.URL ? { URL: e.URL } : {}),
     })),
   );
-  return { cite, ids: cite.getIds() };
+  const entriesById = new Map<string, { id: string }>();
+  for (const entry of cite.data as Array<{ id: string }>) {
+    entriesById.set(entry.id, entry);
+  }
+  return { cite, ids: cite.getIds(), entriesById };
 }
 
 const threeEntries = () =>
