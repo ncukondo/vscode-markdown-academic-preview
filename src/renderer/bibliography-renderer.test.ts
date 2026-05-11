@@ -3,7 +3,6 @@ import { Cite } from "@citation-js/core";
 import "@citation-js/plugin-bibtex";
 import "@citation-js/plugin-csl";
 import { renderBibliography } from "./bibliography-renderer";
-import type { BibliographyRenderOptions } from "./bibliography-renderer";
 
 function makeBibData(
   entries: Array<{
@@ -28,7 +27,11 @@ function makeBibData(
       ...(e.URL ? { URL: e.URL } : {}),
     })),
   );
-  return { cite, ids: cite.getIds() };
+  const entriesById = new Map<string, { id: string }>();
+  for (const entry of cite.data as Array<{ id: string }>) {
+    entriesById.set(entry.id, entry);
+  }
+  return { ids: cite.getIds(), entriesById };
 }
 
 const threeEntries = () =>
@@ -214,7 +217,8 @@ describe("renderBibliography", () => {
         },
       ]);
       // Add editor to the entry data to trigger locale-dependent "Ed." / "Hrsg."
-      bibData.cite.data[0].editor = [{ family: "Editor", given: "Ed" }];
+      const firstEntry = bibData.entriesById.get("smith2020") as { editor?: unknown };
+      firstEntry.editor = [{ family: "Editor", given: "Ed" }];
 
       const enResult = renderBibliography({
         bibliographyData: bibData,

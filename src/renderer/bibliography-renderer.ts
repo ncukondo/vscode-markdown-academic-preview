@@ -42,14 +42,14 @@ export interface BibliographyRenderOptions {
 
 export function renderBibliography(options: BibliographyRenderOptions): string {
   const { bibliographyData, citedIds, nocite, cslStyle } = options;
-  const knownIds = new Set(bibliographyData.ids);
+  const { entriesById } = bibliographyData;
 
-  // Collect all ids that should appear in the bibliography
+  // Collect all ids that should appear in the bibliography (preserves load order)
   const idsToInclude = new Set<string>();
 
   // Add cited ids that exist in the bibliography
   for (const id of citedIds) {
-    if (knownIds.has(id)) {
+    if (entriesById.has(id)) {
       idsToInclude.add(id);
     }
   }
@@ -61,7 +61,7 @@ export function renderBibliography(options: BibliographyRenderOptions): string {
     }
   } else {
     for (const id of nocite) {
-      if (knownIds.has(id)) {
+      if (entriesById.has(id)) {
         idsToInclude.add(id);
       }
     }
@@ -71,9 +71,14 @@ export function renderBibliography(options: BibliographyRenderOptions): string {
     return "";
   }
 
-  // Build a Cite instance with only the entries to include
-  const allData = bibliographyData.cite.data;
-  const selectedData = allData.filter((entry: { id: string }) => idsToInclude.has(entry.id));
+  // Build a Cite instance with only the entries to include — preserve load order
+  const selectedData: unknown[] = [];
+  for (const id of bibliographyData.ids) {
+    if (idsToInclude.has(id)) {
+      const entry = entriesById.get(id);
+      if (entry) selectedData.push(entry);
+    }
+  }
   const selectedCite = new Cite(selectedData);
 
   let template = DEFAULT_TEMPLATE;

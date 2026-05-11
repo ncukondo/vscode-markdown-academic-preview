@@ -29,7 +29,7 @@ Some text with @smith2020 citation.
     });
 
     expect(result.bibData.ids).toContain("smith2020");
-    expect(result.bibData.cite).toBeDefined();
+    expect(result.bibData.entriesById.has("smith2020")).toBe(true);
   });
 
   it("returns empty BibliographyData when no bibliography is specified", () => {
@@ -137,9 +137,9 @@ Text.
 
     expect(result.bibData.ids).toContain("smith2020");
     // The inline reference should have overridden the file entry
-    const entry = result.bibData.cite.data.find(
-      (e: { id: string }) => e.id === "smith2020",
-    );
+    const entry = result.bibData.entriesById.get("smith2020") as
+      | { title?: string }
+      | undefined;
     expect(entry?.title).toBe("Overridden Title");
   });
 

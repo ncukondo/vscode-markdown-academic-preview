@@ -152,6 +152,42 @@ describe("BibliographyCache", () => {
     expect(readFile).toHaveBeenCalledTimes(2);
   });
 
+  it("hits cache when inlineReferences is the same array reference (no stringify)", () => {
+    const { cache, readFile } = createCache();
+    const refs = [
+      { id: "inline1", type: "article-journal", title: "Inline" },
+    ];
+
+    cache.load({ bibliographyPaths: ["/refs.bib"], inlineReferences: refs });
+    cache.load({ bibliographyPaths: ["/refs.bib"], inlineReferences: refs });
+
+    expect(readFile).toHaveBeenCalledTimes(1);
+  });
+
+  it("hits cache when both inlineReferences arrays are empty distinct refs", () => {
+    const { cache, readFile } = createCache();
+
+    cache.load({ bibliographyPaths: ["/refs.bib"], inlineReferences: [] });
+    cache.load({ bibliographyPaths: ["/refs.bib"], inlineReferences: [] });
+
+    expect(readFile).toHaveBeenCalledTimes(1);
+  });
+
+  it("invalidates when only an inline reference id changes", () => {
+    const { cache, readFile } = createCache();
+
+    cache.load({
+      bibliographyPaths: ["/refs.bib"],
+      inlineReferences: [{ id: "a", type: "article-journal", title: "A" }],
+    });
+    cache.load({
+      bibliographyPaths: ["/refs.bib"],
+      inlineReferences: [{ id: "b", type: "article-journal", title: "A" }],
+    });
+
+    expect(readFile).toHaveBeenCalledTimes(2);
+  });
+
   it("tracks mtimes for multiple bib files", () => {
     const { cache, readFile, files } = createCache({
       files: {

@@ -24,7 +24,11 @@ function makeBibData(
       issued: { "date-parts": [[e.year]] },
     })),
   );
-  return { cite, ids: cite.getIds() };
+  const entriesById = new Map<string, { id: string }>();
+  for (const entry of cite.data as Array<{ id: string }>) {
+    entriesById.set(entry.id, entry);
+  }
+  return { ids: cite.getIds(), entriesById };
 }
 
 const defaultBib = () =>

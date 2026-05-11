@@ -365,9 +365,9 @@ function renderBracketCitation(
     return renderFallbackBracket(bibCitations);
   }
 
-  const knownIds = new Set(bibData.ids);
-  const allBibKnown = bibCitations.every((c) => knownIds.has(c.id));
-  const knownCitations = bibCitations.filter((c) => knownIds.has(c.id));
+  const { entriesById } = bibData;
+  const allBibKnown = bibCitations.every((c) => entriesById.has(c.id));
+  const knownCitations = bibCitations.filter((c) => entriesById.has(c.id));
   const tooltipHtml = getPopoverId ? bibliographyTooltipHtml(knownCitations.map((c) => c.id), bibData, cslStyle, locale) : "";
   const popover = buildPopover(tooltipHtml, getPopoverId, knownCitations[0]?.id);
 
@@ -379,7 +379,7 @@ function renderBracketCitation(
       if (cr) {
         const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
         parts.push(renderCrossrefWithWarning(cr.type, cr.label, num, crossrefConfig));
-      } else if (knownIds.has(c.id)) {
+      } else if (entriesById.has(c.id)) {
         parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
       } else {
         parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
@@ -393,7 +393,7 @@ function renderBracketCitation(
     // Mix of known and unknown - render what we can, warn for unknowns
     const parts: string[] = [];
     for (const c of bibCitations) {
-      if (knownIds.has(c.id)) {
+      if (entriesById.has(c.id)) {
         parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
       } else {
         parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
@@ -441,12 +441,13 @@ function renderInlineCitation(
     return renderCrossrefWithWarning(crossref.type, crossref.label, num, crossrefConfig);
   }
 
-  if (!bibData || !bibData.ids.includes(id)) {
+  const entry = bibData?.entriesById.get(id);
+  if (!bibData || !entry) {
     return `<cite class="pandoc-citation pandoc-citation-inline pandoc-citation-warning">@${escapeHtml(id)}</cite>`;
   }
 
   const langOpt = locale ? { lang: locale } : {};
-  const subset = new Cite(bibData.cite.data.filter((e) => e.id === id));
+  const subset = new Cite([entry]);
   let text = String(subset.format("citation", { format: "text", template: cslStyle || "apa", ...langOpt }));
 
   // For inline citation, show "Author (Year)" style instead of "(Author, Year)"
@@ -470,8 +471,7 @@ function renderCitationGroup(
   locale?: string,
 ): string {
   // Build a Cite with just the referenced entries
-  const idSet = new Set(citations.map((c) => c.id));
-  const entries = bibData.cite.data.filter((e) => idSet.has(e.id));
+  const entries = collectEntries(citations.map((c) => c.id), bibData);
   if (entries.length === 0) return "";
 
   const langOpt = locale ? { lang: locale } : {};
@@ -514,9 +514,7 @@ function bibliographyTooltipHtml(
   cslStyle?: string | null,
   locale?: string,
 ): string {
-  const entries = bibData.cite.data.filter((e: { id: string }) =>
-    ids.includes(e.id),
-  );
+  const entries = collectEntries(ids, bibData);
   if (entries.length === 0) return "";
 
   const langOpt = locale ? { lang: locale } : {};
@@ -561,7 +559,7 @@ function renderSingleCitationText(
   cslStyle?: string | null,
   locale?: string,
 ): string {
-  const entry = bibData.cite.data.find((e) => e.id === citation.id);
+  const entry = bibData.entriesById.get(citation.id);
   if (!entry) return `@${citation.id}`;
   const langOpt = locale ? { lang: locale } : {};
   const subset = new Cite([entry]);
@@ -579,26 +577,30 @@ function renderBibliographyHtml(
 ): string {
   if (!bibData || bibData.ids.length === 0) return "";
 
-  // Determine which entries to include
-  const includeIds = new Set(citedIds);
-  const bibIdSet = new Set(bibData.ids);
+  // Determine which entries to include (membership set, order ignored here)
+  const { entriesById } = bibData;
+  const includeIds = new Set<string>();
+  for (const id of citedIds) {
+    if (entriesById.has(id)) includeIds.add(id);
+  }
 
   if (nocite.includes("*")) {
-    // Include all entries
-    for (const id of bibData.ids) {
-      includeIds.add(id);
-    }
+    for (const id of bibData.ids) includeIds.add(id);
   } else {
     for (const id of nocite) {
-      if (bibIdSet.has(id)) {
-        includeIds.add(id);
-      }
+      if (entriesById.has(id)) includeIds.add(id);
     }
   }
 
   if (includeIds.size === 0) return "";
 
-  const entries = bibData.cite.data.filter((e) => includeIds.has(e.id));
+  // Walk bibData.ids to preserve load order — matters for CSL styles
+  // (numeric / appearance) that respect input ordering in the bibliography.
+  const orderedIds: string[] = [];
+  for (const id of bibData.ids) {
+    if (includeIds.has(id)) orderedIds.push(id);
+  }
+  const entries = collectEntries(orderedIds, bibData);
   if (entries.length === 0) return "";
 
   const langOpt = locale ? { lang: locale } : {};
@@ -615,6 +617,22 @@ function renderBibliographyHtml(
 }
 
 // --- Bibliography loading helpers ---
+
+/** Collect CSL entries for the given ids using the O(1) entriesById index. Skips unknown ids. */
+function collectEntries(
+  ids: Iterable<string>,
+  bibData: BibliographyData,
+): Array<{ id: string }> {
+  const seen = new Set<string>();
+  const entries: Array<{ id: string }> = [];
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const entry = bibData.entriesById.get(id);
+    if (entry) entries.push(entry);
+  }
+  return entries;
+}
 
 function resolveBibliographyPaths(
   metadataPaths: string[],

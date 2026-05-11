@@ -1,4 +1,5 @@
 import "@citation-js/plugin-csl";
+import { Cite } from "@citation-js/core";
 import type { BibliographyData } from "../resolver/bibliography";
 
 const DEFAULT_TEMPLATE = "apa";
@@ -51,9 +52,8 @@ export function renderCitation(
   items: CitationRenderItem[],
   options: CitationRenderOptions,
 ): string {
-  const { bibliographyData } = options;
-  const knownIds = new Set(bibliographyData.ids);
-  const unknownItems = items.filter((item) => !knownIds.has(item.id));
+  const { entriesById } = options.bibliographyData;
+  const unknownItems = items.filter((item) => !entriesById.has(item.id));
 
   if (items.length === 0) {
     return "";
@@ -63,7 +63,7 @@ export function renderCitation(
     return `[?${items.map((i) => i.id).join("; ")}]`;
   }
 
-  const validItems = items.filter((item) => knownIds.has(item.id));
+  const validItems = items.filter((item) => entriesById.has(item.id));
   const entry = validItems.map(toCiteprocEntry);
 
   let template = DEFAULT_TEMPLATE;
@@ -72,8 +72,20 @@ export function renderCitation(
     template = CUSTOM_TEMPLATE_KEY;
   }
 
+  // Build a Cite from only the cited entries — avoids relying on the full library
+  // being normalized upfront.
+  const subsetEntries: unknown[] = [];
+  const seen = new Set<string>();
+  for (const item of validItems) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    const e = entriesById.get(item.id);
+    if (e) subsetEntries.push(e);
+  }
+  const subsetCite = new Cite(subsetEntries);
+
   try {
-    const result = bibliographyData.cite.format("citation", {
+    const result = subsetCite.format("citation", {
       entry,
       template,
       ...(options.locale ? { lang: options.locale } : {}),
