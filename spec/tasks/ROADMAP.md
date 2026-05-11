@@ -32,7 +32,7 @@
 | 25 | [Crossref caption rendering](completed/20260323-25-crossref-caption-rendering.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 26 | [Crossref completion provider](completed/20260323-26-crossref-completion.md) | Done | [ADR-005](../decisions/ADR-005-crossref-support.md) |
 | 27 | [Footnote support](completed/20260328-27-footnote-support.md) | Done | — |
-| 28 | [Bibliography large-file performance (Plan C)](20260510-28-bibliography-large-file-perf.md) | Todo | — |
+| 28 | [Bibliography large-file performance (Plan C)](completed/20260510-28-bibliography-large-file-perf.md) | Done | — |
 
 ## Dependency Graph
 
