@@ -42,14 +42,14 @@ export interface BibliographyRenderOptions {
 
 export function renderBibliography(options: BibliographyRenderOptions): string {
   const { bibliographyData, citedIds, nocite, cslStyle } = options;
-  const knownIds = bibliographyData.entriesById;
+  const { entriesById } = bibliographyData;
 
   // Collect all ids that should appear in the bibliography (preserves load order)
   const idsToInclude = new Set<string>();
 
   // Add cited ids that exist in the bibliography
   for (const id of citedIds) {
-    if (knownIds.has(id)) {
+    if (entriesById.has(id)) {
       idsToInclude.add(id);
     }
   }
@@ -61,7 +61,7 @@ export function renderBibliography(options: BibliographyRenderOptions): string {
     }
   } else {
     for (const id of nocite) {
-      if (knownIds.has(id)) {
+      if (entriesById.has(id)) {
         idsToInclude.add(id);
       }
     }
@@ -75,7 +75,7 @@ export function renderBibliography(options: BibliographyRenderOptions): string {
   const selectedData: unknown[] = [];
   for (const id of bibliographyData.ids) {
     if (idsToInclude.has(id)) {
-      const entry = knownIds.get(id);
+      const entry = entriesById.get(id);
       if (entry) selectedData.push(entry);
     }
   }

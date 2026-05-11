@@ -10,15 +10,7 @@ export interface CslEntry {
 }
 
 export interface BibliographyData {
-  /**
-   * Empty stub Cite kept for backward compatibility with the public type.
-   * Internal renderers no longer rely on it; they construct fresh Cite
-   * instances over only the cited subset via `entriesById`.
-   *
-   * @deprecated Use `entriesById` to look up entries; build a Cite over the
-   * subset you need at render time.
-   */
-  cite: Cite;
+  /** Load-order list of entry ids (after dedup + inline-reference merge). */
   ids: string[];
   /** O(1) lookup index: id → CSL entry. Built once per load. */
   entriesById: Map<string, CslEntry>;
@@ -49,6 +41,8 @@ function isJsonFile(filePath: string): boolean {
  * citation-js normalization.
  *
  * - JSON / YAML: parsed directly into the entry array (already CSL-shape).
+ *   Accepts either a top-level array or a Pandoc-style `{ references: [...] }`
+ *   wrapper.
  * - BibTeX and others: must go through citation-js, which both parses the
  *   format and normalizes. Returns the entries from a temporary Cite.
  */
@@ -56,32 +50,38 @@ function parseFileEntries(content: string, filePath: string): CslEntry[] {
   if (!content) return [];
 
   if (isJsonFile(filePath)) {
-    const parsed = JSON.parse(content);
-    return Array.isArray(parsed)
-      ? parsed.filter((e): e is CslEntry => isCslEntry(e))
-      : isCslEntry(parsed)
-        ? [parsed]
-        : [];
+    return normalizeParsedEntries(JSON.parse(content));
   }
 
   if (isYamlFile(filePath)) {
-    const parsed = parseYaml(content);
-    if (Array.isArray(parsed)) {
-      return parsed.filter((e): e is CslEntry => isCslEntry(e));
-    }
-    if (parsed && typeof parsed === "object") {
-      const refs = (parsed as { references?: unknown }).references;
-      if (Array.isArray(refs)) {
-        return refs.filter((e): e is CslEntry => isCslEntry(e));
-      }
-    }
-    return isCslEntry(parsed) ? [parsed as CslEntry] : [];
+    return normalizeParsedEntries(parseYaml(content));
   }
 
   // BibTeX and other formats: must use citation-js to parse.
   // This still pays the citation-js cost, but typical BibTeX files are small.
   const tmp = new Cite(content);
   return tmp.data as CslEntry[];
+}
+
+/**
+ * Normalize a JSON.parse / parseYaml result into a `CslEntry[]`.
+ *
+ * Accepts:
+ *   - `[entry, entry, ...]` (CSL-JSON canonical)
+ *   - `{ references: [entry, ...] }` (Pandoc-style YAML wrapper, also seen in JSON)
+ *   - a single entry object
+ */
+function normalizeParsedEntries(parsed: unknown): CslEntry[] {
+  if (Array.isArray(parsed)) {
+    return parsed.filter((e): e is CslEntry => isCslEntry(e));
+  }
+  if (parsed && typeof parsed === "object") {
+    const refs = (parsed as { references?: unknown }).references;
+    if (Array.isArray(refs)) {
+      return refs.filter((e): e is CslEntry => isCslEntry(e));
+    }
+  }
+  return isCslEntry(parsed) ? [parsed] : [];
 }
 
 function isCslEntry(value: unknown): value is CslEntry {
@@ -119,11 +119,7 @@ function buildBibliographyData(
     }
   }
 
-  // Empty stub Cite — kept for backward-compat with the public type.
-  // Renderers construct their own Cite over the cited subset.
-  const cite = new Cite();
-
-  return { cite, ids, entriesById };
+  return { ids, entriesById };
 }
 
 export async function loadBibliography(

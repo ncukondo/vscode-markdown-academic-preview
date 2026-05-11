@@ -29,7 +29,7 @@ Some text with @smith2020 citation.
     });
 
     expect(result.bibData.ids).toContain("smith2020");
-    expect(result.bibData.cite).toBeDefined();
+    expect(result.bibData.entriesById.has("smith2020")).toBe(true);
   });
 
   it("returns empty BibliographyData when no bibliography is specified", () => {

@@ -365,9 +365,9 @@ function renderBracketCitation(
     return renderFallbackBracket(bibCitations);
   }
 
-  const knownIds = bibData.entriesById;
-  const allBibKnown = bibCitations.every((c) => knownIds.has(c.id));
-  const knownCitations = bibCitations.filter((c) => knownIds.has(c.id));
+  const { entriesById } = bibData;
+  const allBibKnown = bibCitations.every((c) => entriesById.has(c.id));
+  const knownCitations = bibCitations.filter((c) => entriesById.has(c.id));
   const tooltipHtml = getPopoverId ? bibliographyTooltipHtml(knownCitations.map((c) => c.id), bibData, cslStyle, locale) : "";
   const popover = buildPopover(tooltipHtml, getPopoverId, knownCitations[0]?.id);
 
@@ -379,7 +379,7 @@ function renderBracketCitation(
       if (cr) {
         const num = crossrefDefs ? resolveCrossrefNumber(c.id, crossrefDefs) : null;
         parts.push(renderCrossrefWithWarning(cr.type, cr.label, num, crossrefConfig));
-      } else if (knownIds.has(c.id)) {
+      } else if (entriesById.has(c.id)) {
         parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
       } else {
         parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
@@ -393,7 +393,7 @@ function renderBracketCitation(
     // Mix of known and unknown - render what we can, warn for unknowns
     const parts: string[] = [];
     for (const c of bibCitations) {
-      if (knownIds.has(c.id)) {
+      if (entriesById.has(c.id)) {
         parts.push(escapeHtml(renderSingleCitationText(c, bibData, cslStyle, locale)));
       } else {
         parts.push(`<span class="pandoc-citation-warning">@${escapeHtml(c.id)}</span>`);
@@ -577,26 +577,30 @@ function renderBibliographyHtml(
 ): string {
   if (!bibData || bibData.ids.length === 0) return "";
 
-  // Determine which entries to include
-  const includeIds = new Set(citedIds);
-  const bibIdSet = new Set(bibData.ids);
+  // Determine which entries to include (membership set, order ignored here)
+  const { entriesById } = bibData;
+  const includeIds = new Set<string>();
+  for (const id of citedIds) {
+    if (entriesById.has(id)) includeIds.add(id);
+  }
 
   if (nocite.includes("*")) {
-    // Include all entries
-    for (const id of bibData.ids) {
-      includeIds.add(id);
-    }
+    for (const id of bibData.ids) includeIds.add(id);
   } else {
     for (const id of nocite) {
-      if (bibIdSet.has(id)) {
-        includeIds.add(id);
-      }
+      if (entriesById.has(id)) includeIds.add(id);
     }
   }
 
   if (includeIds.size === 0) return "";
 
-  const entries = collectEntries(includeIds, bibData);
+  // Walk bibData.ids to preserve load order — matters for CSL styles
+  // (numeric / appearance) that respect input ordering in the bibliography.
+  const orderedIds: string[] = [];
+  for (const id of bibData.ids) {
+    if (includeIds.has(id)) orderedIds.push(id);
+  }
+  const entries = collectEntries(orderedIds, bibData);
   if (entries.length === 0) return "";
 
   const langOpt = locale ? { lang: locale } : {};

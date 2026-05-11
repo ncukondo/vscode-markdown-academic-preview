@@ -52,9 +52,8 @@ export function renderCitation(
   items: CitationRenderItem[],
   options: CitationRenderOptions,
 ): string {
-  const { bibliographyData } = options;
-  const knownIds = bibliographyData.entriesById;
-  const unknownItems = items.filter((item) => !knownIds.has(item.id));
+  const { entriesById } = options.bibliographyData;
+  const unknownItems = items.filter((item) => !entriesById.has(item.id));
 
   if (items.length === 0) {
     return "";
@@ -64,7 +63,7 @@ export function renderCitation(
     return `[?${items.map((i) => i.id).join("; ")}]`;
   }
 
-  const validItems = items.filter((item) => knownIds.has(item.id));
+  const validItems = items.filter((item) => entriesById.has(item.id));
   const entry = validItems.map(toCiteprocEntry);
 
   let template = DEFAULT_TEMPLATE;
@@ -80,7 +79,7 @@ export function renderCitation(
   for (const item of validItems) {
     if (seen.has(item.id)) continue;
     seen.add(item.id);
-    const e = bibliographyData.entriesById.get(item.id);
+    const e = entriesById.get(item.id);
     if (e) subsetEntries.push(e);
   }
   const subsetCite = new Cite(subsetEntries);

@@ -3,7 +3,6 @@ import { Cite } from "@citation-js/core";
 import "@citation-js/plugin-bibtex";
 import "@citation-js/plugin-csl";
 import { renderBibliography } from "./bibliography-renderer";
-import type { BibliographyRenderOptions } from "./bibliography-renderer";
 
 function makeBibData(
   entries: Array<{
@@ -32,7 +31,7 @@ function makeBibData(
   for (const entry of cite.data as Array<{ id: string }>) {
     entriesById.set(entry.id, entry);
   }
-  return { cite, ids: cite.getIds(), entriesById };
+  return { ids: cite.getIds(), entriesById };
 }
 
 const threeEntries = () =>

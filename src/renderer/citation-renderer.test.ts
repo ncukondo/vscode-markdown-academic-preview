@@ -28,7 +28,7 @@ function makeBibData(
   for (const entry of cite.data as Array<{ id: string }>) {
     entriesById.set(entry.id, entry);
   }
-  return { cite, ids: cite.getIds(), entriesById };
+  return { ids: cite.getIds(), entriesById };
 }
 
 const defaultBib = () =>

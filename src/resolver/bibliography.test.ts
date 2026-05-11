@@ -405,6 +405,35 @@ describe("loadBibliography", () => {
       expect(got?.__markdown_academic_preview_marker).toBe("kept");
       expect(got?.title).toBe("Raw");
     });
+
+    it("accepts Pandoc-style { references: [...] } wrapper in JSON", () => {
+      const wrapped = JSON.stringify({
+        references: [
+          { id: "wrapped1", type: "article-journal", title: "Wrapped A" },
+          { id: "wrapped2", type: "book", title: "Wrapped B" },
+        ],
+      });
+      const result = loadBibliographySync({
+        bibliographyPaths: ["/refs.json"],
+        inlineReferences: [],
+        readFile: () => wrapped,
+      });
+      expect(result.entriesById.size).toBe(2);
+      expect(result.entriesById.has("wrapped1")).toBe(true);
+      expect(result.entriesById.has("wrapped2")).toBe(true);
+    });
+
+    it("accepts Pandoc-style { references: [...] } wrapper in YAML", () => {
+      const yaml = `references:\n  - id: y1\n    type: article-journal\n    title: Y1\n  - id: y2\n    type: book\n    title: Y2\n`;
+      const result = loadBibliographySync({
+        bibliographyPaths: ["/refs.yaml"],
+        inlineReferences: [],
+        readFile: () => yaml,
+      });
+      expect(result.entriesById.size).toBe(2);
+      expect(result.entriesById.has("y1")).toBe(true);
+      expect(result.entriesById.has("y2")).toBe(true);
+    });
   });
 
   describe("Step 6: Error handling", () => {
@@ -417,7 +446,7 @@ describe("loadBibliography", () => {
 
       // Should not throw, returns empty or partial
       expect(result.ids).toBeDefined();
-      expect(result.cite).toBeDefined();
+      expect(result.entriesById).toBeInstanceOf(Map);
     });
 
     it("handles file read failure gracefully", async () => {
@@ -431,7 +460,7 @@ describe("loadBibliography", () => {
 
       // Should not throw, returns empty
       expect(result.ids).toHaveLength(0);
-      expect(result.cite).toBeDefined();
+      expect(result.entriesById.size).toBe(0);
     });
 
     it("returns empty BibliographyData for empty bibliography list and no inline refs", async () => {
